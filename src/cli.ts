@@ -11,7 +11,7 @@ const availableCommands = new Map([
 
 export default async function() {
   const cwd = process.cwd();
-  const command = process.argv.slice(2)[0] ?? 'help';
+  const command = process.argv.slice(2)[0].toLowerCase() ?? 'help';
 
   if (command === 'init') {
     Init(cwd);
