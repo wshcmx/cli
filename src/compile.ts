@@ -9,15 +9,15 @@ export function pretransform(code: string) {
     }
 
     if (ts.isTemplateExpression(node)) {
-      const expressions = [ts.factory.createStringLiteral(node.head.text)];
+      const expressions: ts.Expression[] = [ts.factory.createStringLiteral(node.head.text)];
 
       node.templateSpans.forEach(span => {
-        expressions.push(ts.factory.createStringLiteral(span.expression.getText()));
+        expressions.push(span.expression);
         expressions.push(ts.factory.createStringLiteral(span.literal.text));
       });
-  
+
       let concatenated: ts.Expression = expressions[0];
-  
+
       for (let i = 1; i < expressions.length; i++) {
         concatenated = ts.factory.createBinaryExpression(
           concatenated,
