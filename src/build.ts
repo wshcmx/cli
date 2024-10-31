@@ -1,28 +1,23 @@
-import { CompilerOptions } from "typescript";
-import { XConfiguration } from "./config.js";
-import { relative, resolve } from "node:path";
-import { pipe, transpile } from "./compile.js";
-import { readdirSync, rmSync, statSync } from "node:fs";
+import { resolve } from 'node:path';
+import { pipe, resolveOutputFilepath, transpile } from './compile.js';
+import { readdirSync, rmSync, statSync } from 'node:fs';
+import { CompilerOptions } from 'typescript';
 
-export default function(cwd: string, config: XConfiguration, tsConfig: CompilerOptions) {
-  console.log(`Building "${config.input}"`);
-  const outputDirectoryPath = resolve(cwd, config.output);
+export default function(cwd: string, tsConfig: CompilerOptions) {
+  console.log(`🧹 Cleaning "${tsConfig.outDir!}"`);
+  rmSync(tsConfig.outDir!, { recursive: true, force: true });
 
-  if (config.clean) {
-    console.log(`Cleaning "${outputDirectoryPath}"`);
-    rmSync(outputDirectoryPath, { recursive: true, force: true });
-  }
+  console.log(`🔎 Building "${tsConfig.rootDir}"`);
 
-  const inputDirectoryPath = resolve(cwd, config.input);
-  readdirSync(inputDirectoryPath, { recursive: true })
-    .map(x => resolve(inputDirectoryPath, x.toString()))
+  readdirSync(tsConfig.rootDir!, { recursive: true })
+    .map(x => resolve(tsConfig.rootDir!, x.toString()))
     .filter(x => statSync(x).isFile())
-    .forEach(async (filepath) => {
+    .forEach(async x => {
       pipe(
-        resolve(cwd, config.output, relative(resolve(cwd, config.input), filepath)),
-        await transpile(resolve(cwd, filepath), tsConfig)
+        resolveOutputFilepath(tsConfig.rootDir!, x, tsConfig.outDir!),
+        await transpile(resolve(cwd, x), tsConfig)
       );
-    });
+  });
 
   console.log(`✅ ${new Date().toLocaleTimeString()} Build done`);
 }

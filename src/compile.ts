@@ -1,8 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, extname, resolve } from 'node:path';
+import { basename, dirname, extname, relative, resolve } from 'node:path';
 import ts, { CompilerOptions } from 'typescript';
-
-const reservedExtensions = ['.ts', '.tsx', '.js', '.jsx'];
 
 export function pretransform(code: string) {
   function visitor(node: ts.Node) {
@@ -63,16 +61,6 @@ export async function transpile(path: string, compilerOptions: CompilerOptions) 
   ].reduce((acc, fn) => fn(acc), readFileSync(path, 'utf-8'));
 }
 
-export function resolveExtname(file: string) {
-  const ext = extname(file);
-
-  if (reservedExtensions.includes(ext)) {
-    return resolve(dirname(file), `${basename(file, ext)}.js`);
-  }
-
-  return file;
-}
-
 export function pipe(filepath: string, content: string) {
   const dir = dirname(filepath);
 
@@ -81,4 +69,16 @@ export function pipe(filepath: string, content: string) {
   }
 
   writeFileSync(filepath, content);
+}
+
+export function resolveOutputFilepath(sourcePath: string, filePath: string, output: string = 'dist') {
+  filePath = relative(sourcePath, filePath);
+
+  const ext = extname(filePath);
+
+  if (['.ts', '.tsx', '.js', '.jsx'].includes(ext)) {
+    return resolve(output, dirname(filePath), `${basename(filePath, ext)}.js`);
+  }
+
+  return filePath;
 }

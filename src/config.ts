@@ -1,38 +1,34 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { CompilerOptions } from "typescript";
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import ts, { CompilerOptions } from 'typescript';
 
-export type XConfiguration = {
-  input: string;
-  output: string;
-  clean?: boolean;
-  postwatch?: CallableFunction;
+export const wshcmxConfigFileName = 'wshcmx.config.js';
+const tsConfigFileName = 'tsconfig.json';
+
+export async function getTSConfig(cwd: string) {
+  const tsConfigFilePath = join(cwd, tsConfigFileName);
+
+  if (!existsSync(tsConfigFilePath)) {
+    configError(cwd);
+  }
+
+  const { config } = ts.readConfigFile(tsConfigFilePath, ts.sys.readFile);
+
+  if (config === undefined) {
+    configError(cwd);
+  }
+
+  const { compilerOptions } = config.compilerOptions;
+  return {
+    ...compilerOptions,
+    rootDir: resolve(cwd, config.compilerOptions.rootDir ?? 'src'),
+    outDir: resolve(cwd, config.compilerOptions.outDir ?? 'build'),
+  } as CompilerOptions
 }
 
-export function getTSConfig(cwd: string) {
-  const tsconfigPath = join(cwd, 'tsconfig.json');
-
-  if (!existsSync(tsconfigPath)) {
-    console.error('No tsconfig.json found');
-    process.exit(1);
-  }
-
-  return JSON.parse(readFileSync(tsconfigPath, 'utf-8')).compilerOptions as CompilerOptions;
-}
-
-export async function getConfig(cwd: string) {
-  const path = join(cwd, 'wshcmx.config.json');
-
-  if (existsSync(path)) {
-    return JSON.parse(readFileSync(path, 'utf-8')) as XConfiguration;
-  }
-
-  const jsPath = join(cwd, 'wshcmx.config.js');
-
-  if (existsSync(jsPath)) {
-    return (await import(jsPath)).default as XConfiguration;
-  }
-
-  console.error('No wshcmx config found');
+function configError(cwd: string) {
+  console.error(`There is no "${tsConfigFileName}" configuration at the path "${cwd}"`);
+  console.error('Create a new one with:');
+  console.warn('\tnpx tsc -init');
   process.exit(1);
 }
