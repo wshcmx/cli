@@ -1,6 +1,6 @@
 {
   "name": "@wshcmx/cli",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -14,10 +14,10 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "chokidar": "^4.0.1"
+    "chokidar": "^4.0.1",
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
-    "@types/node": "^22.8.0",
-    "typescript": "^5.6.3"
+    "@types/node": "^22.8.0"
   }
 }
