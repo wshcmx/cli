@@ -2,8 +2,10 @@ import { watch } from 'chokidar';
 import { CompilerOptions } from 'typescript';
 import { relative, resolve } from 'node:path';
 import { pipe, resolveOutputFilepath, transpile } from './compile.js';
+import { WshcmxConfiguration } from './config.js';
+import { rmSync } from 'node:fs';
 
-export default function(cwd: string, tsConfig: CompilerOptions) {
+export default function(cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   console.log(`🔎 Watching for changes in "${tsConfig.rootDir}"`);
 
   watch(tsConfig.rootDir!, {
@@ -21,64 +23,33 @@ export default function(cwd: string, tsConfig: CompilerOptions) {
     ],
     ignorePermissionErrors: true,
   })
-    .on('add', filepath => add(filepath, cwd, tsConfig))
-    .on('change', filepath => change(filepath, cwd, tsConfig))
-    .on('unlink', filepath => unlink(filepath, cwd, tsConfig))
+    .on('add', filepath => add(filepath, cwd, wshcmxConfig, tsConfig))
+    .on('change', filepath => change(filepath, cwd, wshcmxConfig, tsConfig))
+    .on('unlink', filepath => unlink(filepath, cwd, wshcmxConfig, tsConfig))
 }
 
-async function add(filepath: string, cwd: string, tsConfig: CompilerOptions) {
+async function add(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   const absInputFilepath = resolve(cwd, filepath);
   const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-
   const code = await transpile(absInputFilepath, tsConfig);
   pipe(absOutputFilepath, code);
-
-  // if (typeof config.postwatch === 'function') {
-  //   config.postwatch({
-  //     action: 'change',
-  //     cwd,
-  //     code,
-  //     absInputFilepath,
-  //     absOutputFilepath
-  //   });
-  // }
-
+  wshcmxConfig.postwatch?.('add', cwd, code, absInputFilepath, absOutputFilepath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File added "${relative(cwd, absInputFilepath)}"`);
 }
 
-async function change(filepath: string, cwd: string, tsConfig: CompilerOptions) {
+async function change(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   const absInputFilepath = resolve(cwd, filepath);
   const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-
   const code = await transpile(absInputFilepath, tsConfig);
   pipe(absOutputFilepath, code);
-
-  // if (typeof config.postwatch === 'function') {
-  //   config.postwatch({
-  //     action: 'change',
-  //     cwd,
-  //     code,
-  //     absInputFilepath,
-  //     absOutputFilepath
-  //   });
-  // }
-
+  wshcmxConfig.postwatch?.('change', cwd, code, absInputFilepath, absOutputFilepath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File changed "${relative(cwd, absInputFilepath)}"`);
 }
 
-async function unlink(filepath: string, cwd: string, tsConfig: CompilerOptions) {
+async function unlink(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   const absInputFilepath = resolve(cwd, filepath);
   const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-
-  // if (typeof config.postwatch === 'function') {
-  //   config.postwatch({
-  //     action: 'change',
-  //     cwd,
-  //     code: null,
-  //     absInputFilepath,
-  //     absOutputFilepath
-  //   });
-  // }
-
+  wshcmxConfig.postwatch?.('unlink', cwd, '', absInputFilepath, absOutputFilepath);
+  rmSync(absOutputFilepath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File unlinked "${relative(cwd, absInputFilepath)}"`);
 }

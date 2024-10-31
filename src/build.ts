@@ -2,8 +2,9 @@ import { resolve } from 'node:path';
 import { pipe, resolveOutputFilepath, transpile } from './compile.js';
 import { readdirSync, rmSync, statSync } from 'node:fs';
 import { CompilerOptions } from 'typescript';
+import { WshcmxConfiguration } from './config.js';
 
-export default function(cwd: string, tsConfig: CompilerOptions) {
+export default function(cwd: string, _: WshcmxConfiguration, tsConfig: CompilerOptions) {
   console.log(`🧹 Cleaning "${tsConfig.outDir!}"`);
   rmSync(tsConfig.outDir!, { recursive: true, force: true });
 

@@ -2,8 +2,28 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import ts, { CompilerOptions } from 'typescript';
 
+export type WshcmxConfiguration = {
+  postwatch?: (
+    action: 'add' | 'change' | 'unlink',
+    cwd: string,
+    code: string,
+    absInputFilepath: string,
+    absOutputFilepath: string
+  ) => void;
+}
+
 export const wshcmxConfigFileName = 'wshcmx.config.js';
 const tsConfigFileName = 'tsconfig.json';
+
+export async function getWshcmxConfig(cwd: string) {
+  const wshcmxConfigFilePath = join(cwd, wshcmxConfigFileName);
+
+  if (!existsSync(wshcmxConfigFilePath)) {
+    return {};
+  }
+
+  return (await import(wshcmxConfigFilePath)).default as WshcmxConfiguration;
+}
 
 export async function getTSConfig(cwd: string) {
   const tsConfigFilePath = join(cwd, tsConfigFileName);

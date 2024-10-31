@@ -1,7 +1,7 @@
 import Watch from './watch.js';
 import Build from './build.js';
 import Init from './init.js';
-import { getTSConfig, wshcmxConfigFileName } from './config.js';
+import { getTSConfig, getWshcmxConfig, wshcmxConfigFileName } from './config.js';
 
 const availableCommands = new Map([
   ['watch', { callback: Watch, description: 'Watch for changes'}],
@@ -18,6 +18,7 @@ export default async function() {
     process.exit(0);
   }
 
+  const wshcmxConfig = await getWshcmxConfig(cwd);
   const tsConfig = await getTSConfig(cwd);
 
   if (!availableCommands.has(command)) {
@@ -26,5 +27,5 @@ export default async function() {
     process.exit(1);
   }
 
-  availableCommands.get(command)?.callback(cwd, tsConfig);
+  availableCommands.get(command)?.callback(cwd, wshcmxConfig, tsConfig);
 }
