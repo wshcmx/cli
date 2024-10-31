@@ -1,2 +1,7 @@
-# cli
-Typescript компилятор для WSHCM
+# @wshcmx/cli
+
+## Установка
+
+```bash
+npm i @wshcmx/cli -D
+```
