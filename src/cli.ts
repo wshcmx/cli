@@ -11,10 +11,15 @@ const availableCommands = new Map([
 
 export default async function() {
   const cwd = process.cwd();
-  const command = process.argv.slice(2)[0];
+  const command = process.argv.slice(2)[0] ?? 'help';
 
   if (command === 'init') {
     Init(cwd);
+    process.exit(0);
+  }
+
+  if (command === 'help') {
+    console.log(`Available commands:\n\t${Array.from(availableCommands).map(x => `"${x[0]}" - ${x[1].description}`).join('\n\t')}`);
     process.exit(0);
   }
 
