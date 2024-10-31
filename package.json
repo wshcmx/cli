@@ -7,7 +7,7 @@
     "start": "dist/index.js"
   },
   "bin": {
-    "wshcmx": "dist/index.js"
+    "@wshcmx/cli": "dist/index.js"
   },
   "keywords": [],
   "author": "",
