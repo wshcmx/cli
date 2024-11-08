@@ -1,11 +1,50 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, extname, relative, resolve } from 'node:path';
 import ts, { CompilerOptions } from 'typescript';
+import { needToBeCompiled } from './util.js';
 
 export function pretransform(code: string) {
-  function visitor(node: ts.Node) {
+  function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
     if (ts.isExportDeclaration(node) || ts.isImportDeclaration(node)) {
       return ts.factory.createNotEmittedStatement(node);
+    }
+
+    if (ts.isFunctionDeclaration(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateFunctionDeclaration(
+        node,
+        modifiers,
+        node.asteriskToken,
+        node.name,
+        node.typeParameters,
+        node.parameters,
+        node.type,
+        node.body
+      );
+    }
+
+    if (ts.isVariableStatement(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateVariableStatement(
+        node,
+        modifiers,
+        node.declarationList
+      );
+    }
+
+    if (ts.isModuleDeclaration(node) && (node.flags & ts.NodeFlags.Namespace)) {
+      if (node.body && ts.isModuleBlock(node.body)) {
+        const statements = node.body.statements.map((statement) => ts.visitNode(statement, visitor));
+        statements.unshift(
+          ts.factory.createVariableDeclaration(
+            ts.factory.createIdentifier(`"META:NAMESPACE:${node.name.text}"`),
+            undefined,
+            undefined,
+            undefined
+          )
+        );
+        return statements;
+      }
+
+      return undefined as unknown as ts.VisitResult<ts.Node>; // Remove the namespace entirely if empty
     }
 
     if (ts.isTemplateExpression(node)) {
@@ -54,31 +93,19 @@ export function pretransform(code: string) {
   return printer.printFile(result.transformed[0].getSourceFile());
 }
 
-export async function transpile(path: string, compilerOptions: CompilerOptions) {
-  return [
+export async function transpile(filePath: string, code: string, contentType: string | null, compilerOptions: CompilerOptions) {
+  if (!needToBeCompiled(filePath) && contentType === null) {
+    return code;
+  }
+
+  code = [
     pretransform,
     (code: string) => ts.transpile(code, compilerOptions)
-  ].reduce((acc, fn) => fn(acc), readFileSync(path, 'utf-8'));
-}
+  ].reduce((acc, fn) => fn(acc), code);
 
-export function pipe(filepath: string, content: string) {
-  const dir = dirname(filepath);
-
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+  if (contentType === 'cwt') {
+    return `\ufeff<%\n\n${code}\n%>\n`;
   }
 
-  writeFileSync(filepath, content);
-}
-
-export function resolveOutputFilepath(sourcePath: string, filePath: string, output: string = 'dist') {
-  filePath = relative(sourcePath, filePath);
-
-  const ext = extname(filePath);
-
-  if (['.ts', '.tsx', '.js', '.jsx'].includes(ext)) {
-    return resolve(output, dirname(filePath), `${basename(filePath, ext)}.js`);
-  }
-
-  return filePath;
+  return `\ufeff${code}`;
 }

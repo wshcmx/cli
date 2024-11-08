@@ -6,7 +6,7 @@ export type WshcmxConfiguration = {
   postwatch?: (
     action: 'add' | 'change' | 'unlink',
     cwd: string,
-    code: string,
+    code: string | null,
     absInputFilepath: string,
     absOutputFilepath: string
   ) => void;
