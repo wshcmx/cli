@@ -3,9 +3,27 @@ import { needToBeCompiled } from './util.js';
 
 export function pretransform(code: string) {
   function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
+    if (ts.isInterfaceDeclaration(node)) {
+      const modifiers = node.modifiers;
+
+      if (modifiers) {
+        const updatedModifiers = modifiers.filter((modifier) => modifier.kind !== ts.SyntaxKind.ExportKeyword);
+
+        return ts.factory.updateInterfaceDeclaration(
+          node,
+          updatedModifiers,
+          node.name,
+          node.typeParameters,
+          node.heritageClauses,
+          node.members
+        );
+      }
+    }
+
     if (ts.isExportDeclaration(node) || ts.isImportDeclaration(node)) {
       return ts.factory.createNotEmittedStatement(node);
     }
+
 
     if (ts.isFunctionDeclaration(node) && node.modifiers) {
       const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
@@ -44,7 +62,7 @@ export function pretransform(code: string) {
         return statements;
       }
 
-      return undefined as unknown as ts.VisitResult<ts.Node>; // Remove the namespace entirely if empty
+      return undefined as unknown as ts.VisitResult<ts.Node>;
     }
 
     if (ts.isTemplateExpression(node)) {
