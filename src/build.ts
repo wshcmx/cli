@@ -8,12 +8,20 @@ export default function(_cwd: string, _config: WshcmxConfiguration, compilerOpti
   console.log(`🧹 Cleaning "${compilerOptions.outDir!}"`);
   rmSync(compilerOptions.outDir!, { recursive: true, force: true });
 
-  console.log(`🔎 Building "${compilerOptions.rootDir}"`);
+  console.log(`🛠️ Building "${compilerOptions.rootDir}"`);
 
-  readdirSync(compilerOptions.rootDir!, { recursive: true })
+  const files = readdirSync(compilerOptions.rootDir!, { recursive: true })
     .map(x => resolve(compilerOptions.rootDir!, x.toString()))
-    .filter(x => statSync(x).isFile())
-    .forEach(x => transpile(x, compilerOptions));
+    .filter(x => statSync(x).isFile());
 
+  const filesLength = files.length;
+  console.log("🔎 Found files", filesLength);
+
+  files.forEach((x, i) => {
+    transpile(x, compilerOptions);
+    process.stdout.write(`\r✅ Build successfully ${i + 1}/${filesLength} file(s)`);
+  });
+
+  process.stdout.write('\n');
   console.log(`✅ ${new Date().toLocaleTimeString()} Build done`);
 }
