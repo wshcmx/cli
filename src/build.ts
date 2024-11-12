@@ -14,12 +14,17 @@ export default function(_cwd: string, _config: WshcmxConfiguration, compilerOpti
     .map(x => resolve(compilerOptions.rootDir!, x.toString()))
     .filter(x => statSync(x).isFile());
 
-  const filesLength = files.length;
-  console.log("🔎 Found files", filesLength);
+  const progressBarSize = Math.min(process.stdout.columns, 30);
+  const totalFiles = files.length;
+  console.log("🔎 Found files", totalFiles);
 
   files.forEach((x, i) => {
     transpile(x, compilerOptions);
-    process.stdout.write(`\r✅ Build successfully ${i + 1}/${filesLength} file(s)`);
+    const currentFileIndex = i + 1;
+    const percent = (currentFileIndex / totalFiles) * 100;
+    const completedPercents = Math.floor(percent / (100 / progressBarSize));
+    const progress = `Build file(s) progress: [${'='.repeat(completedPercents)}=>${' '.repeat(progressBarSize - completedPercents)}] ${percent.toFixed(2)}%`;
+    process.stdout.write(`\r✅ ${progress}`);
   });
 
   process.stdout.write('\n');
