@@ -5,6 +5,22 @@ import { detectContentType, needToBeCompiled, resolveExtname, writeFile } from '
 
 export function pretransform(code: string) {
   function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
+    if (ts.isObjectLiteralExpression(node)) {
+      const newProperties = node.properties.map((property) => {
+        if (ts.isPropertyAssignment(property) && property.name.getText() === 'callback') {
+          if (ts.isIdentifier(property.initializer)) {
+            return ts.factory.createPropertyAssignment(
+              property.name,
+              ts.factory.createStringLiteral(property.initializer.text)
+            );
+          }
+        }
+        return property;
+      });
+
+      node = ts.factory.createObjectLiteralExpression(newProperties, true);
+    }
+
     if (ts.isInterfaceDeclaration(node)) {
       const modifiers = node.modifiers;
 
