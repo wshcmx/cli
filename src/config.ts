@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import ts, { CompilerOptions } from 'typescript';
 
 export type WshcmxConfiguration = {
@@ -32,17 +32,25 @@ export async function getTSConfig(cwd: string) {
     configError(cwd);
   }
 
-  const { config } = ts.readConfigFile(tsConfigFilePath, ts.sys.readFile);
+  const configFile = ts.readJsonConfigFile(tsConfigFilePath, ts.sys.readFile);
 
+  // Step 2: Convert JSON to TypeScript configuration
+  const config = ts.parseJsonSourceFileConfigFileContent(
+    configFile,
+    ts.sys,
+    dirname(tsConfigFilePath) // base path for resolving relative paths in tsconfig.json
+  );
+  
   if (config === undefined) {
     configError(cwd);
   }
 
-  const { compilerOptions } = config.compilerOptions;
+  const { options } = config;
+
   return {
-    ...compilerOptions,
-    rootDir: resolve(cwd, config.compilerOptions.rootDir ?? 'src'),
-    outDir: resolve(cwd, config.compilerOptions.outDir ?? 'build'),
+    ...options,
+    rootDir: resolve(cwd, options.rootDir ?? 'src'),
+    outDir: resolve(cwd, options.outDir ?? 'build'),
   } as CompilerOptions
 }
 

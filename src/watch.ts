@@ -37,7 +37,6 @@ async function add(filePath: string, cwd: string, wshcmxConfig: WshcmxConfigurat
 
 async function change(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   const [ code, inputFilePath, outputFilePath ] = transpile(resolve(cwd, filePath), tsConfig);
-  console.log(inputFilePath, outputFilePath);
   wshcmxConfig.postwatch?.('change', cwd, code, inputFilePath, outputFilePath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File changed "${relative(cwd, inputFilePath)}"`);
 }

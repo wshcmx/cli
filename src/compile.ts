@@ -123,12 +123,32 @@ export function pretransform(code: string) {
   return printer.printFile(result.transformed[0].getSourceFile());
 }
 
-export function addUtfBom(code: string) {
+function addUtfBom(code: string) {
   return `\ufeff${code}`;
 }
 
-export function wrapASP(code: string) {
+function wrapASP(code: string) {
   return `<%\n\n${code}\n%>\n`;
+}
+
+function prevalidate(filePath: string, compilerOptions: CompilerOptions) {
+  const program = ts.createProgram([filePath], compilerOptions);
+  const emitResult = program.emit();
+  const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+
+  allDiagnostics.forEach(diagnostic => {
+    if (diagnostic.file) {
+      const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
+      console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+    } else {
+      console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+    }
+  });
+
+  if (allDiagnostics.length && compilerOptions.noEmitOnError) {
+    process.exit(1);
+  }
 }
 
 export function transpile(filePath: string, compilerOptions: CompilerOptions) {
@@ -141,6 +161,8 @@ export function transpile(filePath: string, compilerOptions: CompilerOptions) {
     writeFile(outputFilePath, code);
     return [ code, filePath, outputFilePath ];
   }
+
+  prevalidate(filePath, compilerOptions);
 
   code = [
     pretransform,
