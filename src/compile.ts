@@ -131,12 +131,14 @@ function wrapASP(code: string) {
   return `<%\n\n${code}\n%>\n`;
 }
 
-function prevalidate(filePath: string, compilerOptions: CompilerOptions) {
-  const program = ts.createProgram([filePath], compilerOptions);
-  const emitResult = program.emit();
-  const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+function prevalidate(code: string, filePath: string, compilerOptions: CompilerOptions) {
+  const { diagnostics } = ts.transpileModule(code, { compilerOptions: { ...compilerOptions, noEmit: true }});
 
-  allDiagnostics.forEach(diagnostic => {
+  if (diagnostics === undefined) {
+    return;
+  }
+
+  diagnostics.forEach(diagnostic => {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
@@ -146,7 +148,7 @@ function prevalidate(filePath: string, compilerOptions: CompilerOptions) {
     }
   });
 
-  if (allDiagnostics.length && compilerOptions.noEmitOnError) {
+  if (diagnostics.length && compilerOptions.noEmitOnError) {
     process.exit(1);
   }
 }
@@ -162,7 +164,7 @@ export function transpile(filePath: string, compilerOptions: CompilerOptions) {
     return [ code, filePath, outputFilePath ];
   }
 
-  prevalidate(filePath, compilerOptions);
+  prevalidate(code, filePath, compilerOptions);
 
   code = [
     pretransform,
