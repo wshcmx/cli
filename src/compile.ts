@@ -26,6 +26,16 @@ export function pretransform(code: string) {
       return ts.factory.createNotEmittedStatement(node);
     }
 
+    if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateTypeAliasDeclaration(
+        node,
+        modifiers,
+        node.name,
+        node.typeParameters,
+        node.type
+      );
+    }
 
     if (ts.isFunctionDeclaration(node) && node.modifiers) {
       const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
