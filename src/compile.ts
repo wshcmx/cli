@@ -95,7 +95,7 @@ export function pretransform(code: string) {
         );
       }
 
-      return concatenated;
+      node = concatenated;
     }
 
     if (ts.isEnumDeclaration(node)) {
