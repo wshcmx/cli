@@ -3,7 +3,7 @@ import { relative, resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { detectContentType, needToBeCompiled, resolveExtname, writeFile } from './util.js';
 
-export function pretransform(code: string) {
+export function pretransform(code: string, compilerOptions: CompilerOptions) {
   function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
     if (ts.isInterfaceDeclaration(node)) {
       const modifiers = node.modifiers;
@@ -117,10 +117,23 @@ export function pretransform(code: string) {
     return ts.visitEachChild(node, visitor, undefined);
   }
 
-  const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES5, true);
-  const result = ts.transform(sourceFile, [() => (rootNode: ts.Node) => ts.visitNode(rootNode, visitor)]);
-  const printer = ts.createPrinter();
-  return printer.printFile(result.transformed[0].getSourceFile());
+  const { outputText } = ts.transpileModule(code, {
+    compilerOptions: {
+      ...compilerOptions,
+      noEmit: true
+    },
+    transformers: {
+      before: [() => node => ts.visitNode(node, visitor) as ts.SourceFile]
+    }
+  });
+
+  return unescapeCharacters(outputText);
+}
+
+function unescapeCharacters(code: string) {
+  return code.replace(/\\u([0-9A-Fa-f]{4})/g, (_match, char) => {
+    return String.fromCharCode(parseInt(char, 16));
+  });
 }
 
 function addUtfBom(code: string) {
@@ -167,7 +180,7 @@ export function transpile(filePath: string, compilerOptions: CompilerOptions) {
   prevalidate(code, filePath, compilerOptions);
 
   code = [
-    pretransform,
+    (code: string) => pretransform(code, compilerOptions),
     (code: string) => ts.transpile(code, compilerOptions),
     (code: string) => contentType === 'cwt' ? wrapASP(code) : code,
     addUtfBom
