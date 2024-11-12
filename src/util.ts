@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { extname, dirname, basename, resolve } from "node:path";
 
-const TEMPLATE_REGEX = /\/{3}\s+<template\s+type="(.+)"\s+\/>/;
+const TEMPLATE_REGEX = /\/{3}\s@template\s(.+)/;
 const COMPILED_EXTS_MAP = new Map([
   ['.ts', '.js'],
   ['.tsx', '.html'],
@@ -30,7 +30,7 @@ export function resolveExtname(filePath: string, contentType: string | null) {
 
   if (contentType === 'cwt') {
     return resolve(dirname(filePath), `${basename(filePath, ext)}.html`);
-  } else if (contentType === 'bs') {
+  } else if (contentType === 'namespace') {
     return resolve(dirname(filePath), `${basename(filePath, ext)}.bs`);
   }
 

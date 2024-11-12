@@ -4,7 +4,7 @@ import { relative, resolve } from 'node:path';
 import { transpile } from './compile.js';
 import { WshcmxConfiguration } from './config.js';
 import { readFileSync, rmSync } from 'node:fs';
-import { detectContentType, resolveExtname, writeFile } from './util.js';
+import { detectContentType, resolveExtname } from './util.js';
 
 export default function(cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   console.log(`🔎 Watching for changes in "${tsConfig.rootDir}"`);
@@ -30,33 +30,14 @@ export default function(cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig
 }
 
 async function add(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
-  const inputFilePath = resolve(cwd, filePath);
-  const content = readFileSync(inputFilePath, 'utf-8');
-  const contentType = detectContentType(content, filePath);
-  const outputFilePath = resolve(tsConfig.outDir!, relative(tsConfig.rootDir!, resolveExtname(filePath, contentType)));
-  const code = await transpile(filePath, content, contentType, tsConfig);
-
-  writeFile(
-    outputFilePath,
-    code
-  );
-
-  wshcmxConfig.postwatch?.('add', cwd, code, filePath, outputFilePath);
+  const [ code, inputFilePath, outputFilePath ] = transpile(resolve(cwd, filePath), tsConfig);
+  wshcmxConfig.postwatch?.('add', cwd, code, inputFilePath, outputFilePath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File added "${relative(cwd, outputFilePath)}"`);
 }
 
 async function change(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
-  const inputFilePath = resolve(cwd, filePath);
-  const content = readFileSync(inputFilePath, 'utf-8');
-  const contentType = detectContentType(content, filePath);
-  const outputFilePath = resolve(tsConfig.outDir!, relative(tsConfig.rootDir!, resolveExtname(filePath, contentType)));
-  const code = await transpile(filePath, content, contentType, tsConfig);
-
-  writeFile(
-    outputFilePath,
-    code
-  );
-
+  const [ code, inputFilePath, outputFilePath ] = transpile(resolve(cwd, filePath), tsConfig);
+  console.log(inputFilePath, outputFilePath);
   wshcmxConfig.postwatch?.('change', cwd, code, inputFilePath, outputFilePath);
   console.log(`✅ ${new Date().toLocaleTimeString()} File changed "${relative(cwd, inputFilePath)}"`);
 }

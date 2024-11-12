@@ -1,5 +1,7 @@
 import ts, { CompilerOptions } from 'typescript';
-import { needToBeCompiled } from './util.js';
+import { relative, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { detectContentType, needToBeCompiled, resolveExtname, writeFile } from './util.js';
 
 export function pretransform(code: string) {
   function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
@@ -111,19 +113,33 @@ export function pretransform(code: string) {
   return printer.printFile(result.transformed[0].getSourceFile());
 }
 
-export async function transpile(filePath: string, code: string, contentType: string | null, compilerOptions: CompilerOptions) {
+export function addUtfBom(code: string) {
+  return `\ufeff${code}`;
+}
+
+export function wrapASP(code: string) {
+  return `<%\n\n${code}\n%>\n`;
+}
+
+export function transpile(filePath: string, compilerOptions: CompilerOptions) {
+  filePath = resolve(compilerOptions.rootDir!, filePath);
+  let code = readFileSync(filePath, 'utf-8');
+  const contentType = detectContentType(code, filePath);
+  const outputFilePath = resolve(compilerOptions.outDir!, relative(compilerOptions.rootDir!, resolveExtname(filePath, contentType)));
+
   if (!needToBeCompiled(filePath) && contentType === null) {
-    return code;
+    writeFile(outputFilePath, code);
+    return [ code, filePath, outputFilePath ];
   }
 
   code = [
     pretransform,
-    (code: string) => ts.transpile(code, compilerOptions)
+    (code: string) => ts.transpile(code, compilerOptions),
+    (code: string) => contentType === 'cwt' ? wrapASP(code) : code,
+    addUtfBom
   ].reduce((acc, fn) => fn(acc), code);
 
-  if (contentType === 'cwt') {
-    return `\ufeff<%\n\n${code}\n%>\n`;
-  }
+  writeFile(outputFilePath, code);
 
-  return `\ufeff${code}`;
+  return [ code, filePath, outputFilePath ];
 }
