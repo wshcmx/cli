@@ -1,11 +1,96 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, extname, relative, resolve } from 'node:path';
 import ts, { CompilerOptions } from 'typescript';
+import { relative, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { detectContentType, needToBeCompiled, resolveExtname, writeFile } from './util.js';
 
 export function pretransform(code: string) {
-  function visitor(node: ts.Node) {
+  function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
+    if (ts.isObjectLiteralExpression(node)) {
+      const newProperties = node.properties.map((property) => {
+        if (ts.isPropertyAssignment(property) && property.name.getText() === 'callback') {
+          if (ts.isIdentifier(property.initializer)) {
+            return ts.factory.createPropertyAssignment(
+              property.name,
+              ts.factory.createStringLiteral(property.initializer.text)
+            );
+          }
+        }
+        return property;
+      });
+
+      node = ts.factory.createObjectLiteralExpression(newProperties, true);
+    }
+
+    if (ts.isInterfaceDeclaration(node)) {
+      const modifiers = node.modifiers;
+
+      if (modifiers) {
+        const updatedModifiers = modifiers.filter((modifier) => modifier.kind !== ts.SyntaxKind.ExportKeyword);
+
+        return ts.factory.updateInterfaceDeclaration(
+          node,
+          updatedModifiers,
+          node.name,
+          node.typeParameters,
+          node.heritageClauses,
+          node.members
+        );
+      }
+    }
+
     if (ts.isExportDeclaration(node) || ts.isImportDeclaration(node)) {
       return ts.factory.createNotEmittedStatement(node);
+    }
+
+    if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateTypeAliasDeclaration(
+        node,
+        modifiers,
+        node.name,
+        node.typeParameters,
+        node.type
+      );
+    }
+
+    if (ts.isFunctionDeclaration(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateFunctionDeclaration(
+        node,
+        modifiers,
+        node.asteriskToken,
+        node.name,
+        node.typeParameters,
+        node.parameters,
+        node.type,
+        node.body
+      );
+    }
+
+    if (ts.isVariableStatement(node) && node.modifiers) {
+      const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+      node = ts.factory.updateVariableStatement(
+        node,
+        modifiers,
+        node.declarationList
+      );
+    }
+
+    if (ts.isModuleDeclaration(node) && (node.flags & ts.NodeFlags.Namespace)) {
+      if (node.body && ts.isModuleBlock(node.body)) {
+        const statements = node.body.statements.map((statement) => ts.visitNode(statement, visitor));
+        statements.unshift(
+          ts.factory.createVariableDeclaration(
+            ts.factory.createIdentifier(`"META:NAMESPACE:${node.name.text}"`),
+            undefined,
+            undefined,
+            undefined
+          )
+        );
+        return statements;
+      }
+
+      return undefined as unknown as ts.VisitResult<ts.Node>;
     }
 
     if (ts.isTemplateExpression(node)) {
@@ -26,7 +111,7 @@ export function pretransform(code: string) {
         );
       }
 
-      return concatenated;
+      node = concatenated;
     }
 
     if (ts.isEnumDeclaration(node)) {
@@ -51,34 +136,66 @@ export function pretransform(code: string) {
   const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES5, true);
   const result = ts.transform(sourceFile, [() => (rootNode: ts.Node) => ts.visitNode(rootNode, visitor)]);
   const printer = ts.createPrinter();
-  return printer.printFile(result.transformed[0].getSourceFile());
+  return unescapeCharacters(printer.printFile(result.transformed[0].getSourceFile()));
 }
 
-export async function transpile(path: string, compilerOptions: CompilerOptions) {
-  return [
+function unescapeCharacters(code: string) {
+  return code.replace(/\\u([0-9A-Fa-f]{4})/g, (_match, char) => {
+    return String.fromCharCode(parseInt(char, 16));
+  });
+}
+
+function addUtfBom(code: string) {
+  return `\ufeff${code}`;
+}
+
+function wrapASP(code: string) {
+  return `<%\n\n${code}\n%>\n`;
+}
+
+function prevalidate(code: string, filePath: string, compilerOptions: CompilerOptions) {
+  const { diagnostics } = ts.transpileModule(code, { compilerOptions: { ...compilerOptions, noEmit: true }});
+
+  if (diagnostics === undefined) {
+    return;
+  }
+
+  diagnostics.forEach(diagnostic => {
+    if (diagnostic.file) {
+      const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
+      console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+    } else {
+      console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+    }
+  });
+
+  if (diagnostics.length && compilerOptions.noEmitOnError) {
+    process.exit(1);
+  }
+}
+
+export function transpile(filePath: string, compilerOptions: CompilerOptions) {
+  filePath = resolve(compilerOptions.rootDir!, filePath);
+  let code = readFileSync(filePath, 'utf-8');
+  const contentType = detectContentType(code, filePath);
+  const outputFilePath = resolve(compilerOptions.outDir!, relative(compilerOptions.rootDir!, resolveExtname(filePath, contentType)));
+
+  if (!needToBeCompiled(filePath) && contentType === null) {
+    writeFile(outputFilePath, code);
+    return [ code, filePath, outputFilePath ];
+  }
+
+  prevalidate(code, filePath, compilerOptions);
+
+  code = [
     pretransform,
-    (code: string) => ts.transpile(code, compilerOptions)
-  ].reduce((acc, fn) => fn(acc), readFileSync(path, 'utf-8'));
-}
+    (code: string) => ts.transpile(code, compilerOptions),
+    (code: string) => contentType === 'cwt' ? wrapASP(code) : code,
+    addUtfBom
+  ].reduce((acc, fn) => fn(acc), code);
 
-export function pipe(filepath: string, content: string) {
-  const dir = dirname(filepath);
+  writeFile(outputFilePath, code);
 
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-
-  writeFileSync(filepath, content);
-}
-
-export function resolveOutputFilepath(sourcePath: string, filePath: string, output: string = 'dist') {
-  filePath = relative(sourcePath, filePath);
-
-  const ext = extname(filePath);
-
-  if (['.ts', '.tsx', '.js', '.jsx'].includes(ext)) {
-    return resolve(output, dirname(filePath), `${basename(filePath, ext)}.js`);
-  }
-
-  return filePath;
+  return [ code, filePath, outputFilePath ];
 }

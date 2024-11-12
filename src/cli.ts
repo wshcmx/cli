@@ -7,7 +7,7 @@ const availableCommands = new Map([
   ['watch', { callback: Watch, description: 'Watch for changes'}],
   ['build', { callback: Build, description: 'Build the project'}],
   ['init', { callback: Init, description: `Create a new "${wshcmxConfigFileName}" file`}],
-])
+]);
 
 export default async function() {
   const cwd = process.cwd();

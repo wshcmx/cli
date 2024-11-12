@@ -1,9 +1,10 @@
 import { watch } from 'chokidar';
 import { CompilerOptions } from 'typescript';
 import { relative, resolve } from 'node:path';
-import { pipe, resolveOutputFilepath, transpile } from './compile.js';
+import { transpile } from './compile.js';
 import { WshcmxConfiguration } from './config.js';
-import { rmSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
+import { detectContentType, resolveExtname } from './util.js';
 
 export default function(cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
   console.log(`🔎 Watching for changes in "${tsConfig.rootDir}"`);
@@ -23,33 +24,30 @@ export default function(cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig
     ],
     ignorePermissionErrors: true,
   })
-    .on('add', filepath => add(filepath, cwd, wshcmxConfig, tsConfig))
-    .on('change', filepath => change(filepath, cwd, wshcmxConfig, tsConfig))
-    .on('unlink', filepath => unlink(filepath, cwd, wshcmxConfig, tsConfig))
+    .on('add', filePath => add(filePath, cwd, wshcmxConfig, tsConfig))
+    .on('change', filePath => change(filePath, cwd, wshcmxConfig, tsConfig))
+    .on('unlink', filePath => unlink(filePath, cwd, wshcmxConfig, tsConfig))
 }
 
-async function add(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
-  const absInputFilepath = resolve(cwd, filepath);
-  const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-  const code = await transpile(absInputFilepath, tsConfig);
-  pipe(absOutputFilepath, code);
-  wshcmxConfig.postwatch?.('add', cwd, code, absInputFilepath, absOutputFilepath);
-  console.log(`✅ ${new Date().toLocaleTimeString()} File added "${relative(cwd, absInputFilepath)}"`);
+async function add(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
+  const [ code, inputFilePath, outputFilePath ] = transpile(resolve(cwd, filePath), tsConfig);
+  wshcmxConfig.postwatch?.('add', cwd, code, inputFilePath, outputFilePath);
+  console.log(`✅ ${new Date().toLocaleTimeString()} File added "${relative(cwd, outputFilePath)}"`);
 }
 
-async function change(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
-  const absInputFilepath = resolve(cwd, filepath);
-  const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-  const code = await transpile(absInputFilepath, tsConfig);
-  pipe(absOutputFilepath, code);
-  wshcmxConfig.postwatch?.('change', cwd, code, absInputFilepath, absOutputFilepath);
-  console.log(`✅ ${new Date().toLocaleTimeString()} File changed "${relative(cwd, absInputFilepath)}"`);
+async function change(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
+  const [ code, inputFilePath, outputFilePath ] = transpile(resolve(cwd, filePath), tsConfig);
+  wshcmxConfig.postwatch?.('change', cwd, code, inputFilePath, outputFilePath);
+  console.log(`✅ ${new Date().toLocaleTimeString()} File changed "${relative(cwd, inputFilePath)}"`);
 }
 
-async function unlink(filepath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
-  const absInputFilepath = resolve(cwd, filepath);
-  const absOutputFilepath = resolveOutputFilepath(tsConfig.rootDir!, filepath, tsConfig.outDir!);
-  wshcmxConfig.postwatch?.('unlink', cwd, '', absInputFilepath, absOutputFilepath);
-  rmSync(absOutputFilepath);
-  console.log(`✅ ${new Date().toLocaleTimeString()} File unlinked "${relative(cwd, absInputFilepath)}"`);
+async function unlink(filePath: string, cwd: string, wshcmxConfig: WshcmxConfiguration, tsConfig: CompilerOptions) {
+  const inputFilePath = resolve(cwd, filePath);
+  const content = readFileSync(inputFilePath, 'utf-8');
+  const contentType = detectContentType(content, filePath);
+  const outputFilePath = resolve(tsConfig.outDir!, relative(tsConfig.rootDir!, resolveExtname(filePath, contentType)));
+
+  wshcmxConfig.postwatch?.('unlink', cwd, null, inputFilePath, outputFilePath);
+  rmSync(outputFilePath);
+  console.log(`✅ ${new Date().toLocaleTimeString()} File unlinked "${relative(cwd, inputFilePath)}"`);
 }
