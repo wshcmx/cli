@@ -5,10 +5,12 @@ import { WshcmxConfiguration } from './config.js';
 import { transpile } from './compile.js';
 
 export default function(_cwd: string, _config: WshcmxConfiguration, compilerOptions: CompilerOptions) {
-  console.log(`🧹 Cleaning "${compilerOptions.outDir!}"`);
-  rmSync(compilerOptions.outDir!, { recursive: true, force: true });
+  if (!compilerOptions.incremental) {
+    console.log(`🧹 Cleaning "${compilerOptions.outDir!}"`);
+    rmSync(compilerOptions.outDir!, { recursive: true, force: true });
+  }
 
-  console.log(`🛠️ Building "${compilerOptions.rootDir}"`);
+  console.log(`🔨 Building "${compilerOptions.rootDir}"`);
 
   const files = readdirSync(compilerOptions.rootDir!, { recursive: true })
     .map(x => resolve(compilerOptions.rootDir!, x.toString()))
