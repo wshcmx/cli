@@ -18,7 +18,7 @@ export default function(_cwd: string, _config: WshcmxConfiguration, compilerOpti
 
   const progressBarSize = Math.min(process.stdout.columns, 30);
   const totalFiles = files.length;
-  console.log("🔎 Found files", totalFiles);
+  console.log('🔎 Found files', totalFiles);
 
   files.forEach((x, i) => {
     transpile(x, compilerOptions);
