@@ -12,8 +12,10 @@ export type WshcmxConfiguration = {
   ) => void;
 }
 
+
 export const wshcmxConfigFileName = 'wshcmx.config.js';
 const tsConfigFileName = 'tsconfig.json';
+export let tsConfigFilePath: string;
 
 export async function getWshcmxConfig(cwd: string) {
   const wshcmxConfigFilePath = join(cwd, wshcmxConfigFileName);
@@ -26,7 +28,17 @@ export async function getWshcmxConfig(cwd: string) {
 }
 
 export async function getTSConfig(cwd: string) {
-  const tsConfigFilePath = join(cwd, tsConfigFileName);
+  const _tempConfigPath = ts.findConfigFile(
+    cwd,
+    ts.sys.fileExists,
+    "tsconfig.json"
+  );
+
+  if (_tempConfigPath === undefined) {
+    configError(cwd);
+  }
+
+  tsConfigFilePath = _tempConfigPath;
 
   if (!existsSync(tsConfigFilePath)) {
     configError(cwd);
@@ -34,13 +46,12 @@ export async function getTSConfig(cwd: string) {
 
   const configFile = ts.readJsonConfigFile(tsConfigFilePath, ts.sys.readFile);
 
-  // Step 2: Convert JSON to TypeScript configuration
   const config = ts.parseJsonSourceFileConfigFileContent(
     configFile,
     ts.sys,
-    dirname(tsConfigFilePath) // base path for resolving relative paths in tsconfig.json
+    dirname(tsConfigFilePath)
   );
-  
+
   if (config === undefined) {
     configError(cwd);
   }
@@ -54,7 +65,7 @@ export async function getTSConfig(cwd: string) {
   } as CompilerOptions
 }
 
-function configError(cwd: string) {
+function configError(cwd: string): never {
   console.error(`There is no "${tsConfigFileName}" configuration at the path "${cwd}"`);
   console.error('Create a new one with:');
   console.warn('\tnpx tsc -init');

@@ -3,7 +3,7 @@ import { relative, resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { detectContentType, needToBeCompiled, resolveExtname, writeFile } from './util.js';
 
-export function pretransform(code: string) {
+export function transform(filePath: string, code: string, compilerOptions: CompilerOptions) {
   function visitor(node: ts.Node): ts.VisitResult<ts.Node> {
     if (ts.isObjectLiteralExpression(node)) {
       const newProperties = node.properties.map((property) => {
@@ -39,7 +39,7 @@ export function pretransform(code: string) {
     }
 
     if (ts.isExportDeclaration(node) || ts.isImportDeclaration(node)) {
-      return ts.factory.createNotEmittedStatement(node);
+      node = ts.factory.createNotEmittedStatement(node);
     }
 
     if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
@@ -78,19 +78,10 @@ export function pretransform(code: string) {
 
     if (ts.isModuleDeclaration(node) && (node.flags & ts.NodeFlags.Namespace)) {
       if (node.body && ts.isModuleBlock(node.body)) {
-        const statements = node.body.statements.map((statement) => ts.visitNode(statement, visitor));
-        statements.unshift(
-          ts.factory.createVariableDeclaration(
-            ts.factory.createIdentifier(`"META:NAMESPACE:${node.name.text}"`),
-            undefined,
-            undefined,
-            undefined
-          )
-        );
-        return statements;
+        const statements = node.body.statements.map((statement) => ts.visitNode(statement, visitor) as ts.Statement);
+        const customString = ts.factory.createExpressionStatement(ts.factory.createStringLiteral(`META:NAMESPACE:${node.name.text}`));
+        return [customString, ...statements];
       }
-
-      return undefined as unknown as ts.VisitResult<ts.Node>;
     }
 
     if (ts.isTemplateExpression(node)) {
@@ -136,7 +127,23 @@ export function pretransform(code: string) {
   const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES5, true);
   const result = ts.transform(sourceFile, [() => (rootNode: ts.Node) => ts.visitNode(rootNode, visitor)]);
   const printer = ts.createPrinter();
-  return unescapeCharacters(printer.printFile(result.transformed[0].getSourceFile()));
+  const transformed = unescapeCharacters(printer.printFile(result.transformed[0].getSourceFile()));
+  const diagnostics: ts.Diagnostic[] = [];
+  const transpiled = ts.transpile(unescapeCharacters(transformed), { ...compilerOptions, noEmit: true }, filePath, diagnostics);
+
+  if (diagnostics.length > 0) {
+    diagnostics.map(diagnostic => {
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+      if (diagnostic.file) {
+        const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!);
+        console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      } else {
+        console.error(message);
+      }
+    });
+  }
+
+  return transpiled;
 }
 
 function unescapeCharacters(code: string) {
@@ -153,30 +160,13 @@ function wrapASP(code: string) {
   return `<%\n\n${code}\n%>\n`;
 }
 
-function prevalidate(code: string, filePath: string, compilerOptions: CompilerOptions) {
-  const { diagnostics } = ts.transpileModule(code, { compilerOptions: { ...compilerOptions, noEmit: true }});
-
-  if (diagnostics === undefined) {
-    return;
-  }
-
-  diagnostics.forEach(diagnostic => {
-    if (diagnostic.file) {
-      const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
-      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
-      console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
-    } else {
-      console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
-    }
-  });
-
-  if (diagnostics.length && compilerOptions.noEmitOnError) {
-    process.exit(1);
-  }
-}
-
 export function transpile(filePath: string, compilerOptions: CompilerOptions) {
   filePath = resolve(compilerOptions.rootDir!, filePath);
+
+  if (filePath.endsWith('.d.ts')) {
+    return [ '', filePath, '' ];
+  }
+
   let code = readFileSync(filePath, 'utf-8');
   const contentType = detectContentType(code, filePath);
   const outputFilePath = resolve(compilerOptions.outDir!, relative(compilerOptions.rootDir!, resolveExtname(filePath, contentType)));
@@ -186,11 +176,8 @@ export function transpile(filePath: string, compilerOptions: CompilerOptions) {
     return [ code, filePath, outputFilePath ];
   }
 
-  prevalidate(code, filePath, compilerOptions);
-
   code = [
-    pretransform,
-    (code: string) => ts.transpile(code, compilerOptions),
+    (code: string) => transform(filePath, code, compilerOptions),
     (code: string) => contentType === 'cwt' ? wrapASP(code) : code,
     addUtfBom
   ].reduce((acc, fn) => fn(acc), code);
