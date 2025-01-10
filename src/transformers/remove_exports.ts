@@ -16,49 +16,46 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
         );
       }
     
-      if (ts.isExportDeclaration(node)) {//} && node.modifiers) {
-        // try {
-        //   console.log(node.getFullText());
-        // } catch (e) {}
-        // node = ts.factory.updateExportDeclaration(
-        //   node as ts.ExportDeclaration,
-        //   [],
-        //   true,
-        //   undefined,
-        //   undefined,
-        //   undefined,
-        // );
+      if (ts.isExportDeclaration(node) && node.modifiers) {
+        node = ts.factory.updateExportDeclaration(
+          node as ts.ExportDeclaration,
+          [],
+          true,
+          undefined,
+          undefined,
+          undefined,
+        );
       }
-    
-      // if (ts.isImportDeclaration(node)) {
-      //   node = ts.factory.updateImportDeclaration(
-      //     node,
-      //     [],
-      //     node.importClause,
-      //     node.moduleSpecifier,
-      //     node.attributes
-      //   );
-      // }
 
-      // if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
-      //   const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
-      //   node = ts.factory.updateTypeAliasDeclaration(
-      //     node,
-      //     modifiers,
-      //     node.name,
-      //     node.typeParameters,
-      //     node.type
-      //   );
-      // }
+      if (ts.isImportDeclaration(node)) {
+        node = ts.factory.updateImportDeclaration(
+          node,
+          [],
+          node.importClause,
+          node.moduleSpecifier,
+          node.attributes
+        );
+      }
 
-      // if (ts.isVariableStatement(node) && node.modifiers) {
-      //   const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
-      //   node = ts.factory.updateVariableStatement(
-      //     node,
-      //     modifiers,
-      //     node.declarationList
-      //   );
-      // }
+      if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
+        const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+        node = ts.factory.updateTypeAliasDeclaration(
+          node,
+          modifiers,
+          node.name,
+          node.typeParameters,
+          node.type
+        );
+      }
+
+      if (ts.isVariableStatement(node) && node.modifiers) {
+        const modifiers = node.modifiers.filter(mod => mod.kind !== ts.SyntaxKind.ExportKeyword);
+        node = ts.factory.updateVariableStatement(
+          node,
+          modifiers,
+          node.declarationList
+        );
+      }
 
       return ts.visitEachChild(node, visit, context);
     }
