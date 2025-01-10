@@ -1,3 +1,5 @@
+import util from 'node:util';
+
 import ts from 'typescript';
 
 import { getTSConfig } from '../config.js';
@@ -6,9 +8,10 @@ import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters.js';
+import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
 
 export function build(cwd: string) {
-  console.log(`🔨 Building started`);
+  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
   const configuration = getTSConfig(cwd);
 
   const program = ts.createProgram(configuration.fileNames, configuration.options);
@@ -28,18 +31,19 @@ export function build(cwd: string) {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      console.error(util.styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
     } else {
-      console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+      console.error(util.styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
     }
   });
 
   if (emitResult.emitSkipped) {
-    console.error('Compile process failed.');
+    console.error(util.styleText('red', 'Build process failed.'));
     process.exit(1);
   }
 
   convertUnicodeFiles(configuration.options.outDir);
-  console.log(`✅ ${new Date().toLocaleTimeString()} Compile done`);
+  renameNamespaces(configuration.options.outDir);
+  console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);
   process.exit(0);
 }
