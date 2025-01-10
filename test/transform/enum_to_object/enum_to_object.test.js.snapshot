@@ -1,8 +1,0 @@
-exports[`Suite of snapshot enum_to_object tests > Enum simple 1`] = `
-var CustomEnumerator = {
-    a: 1,
-    b: 2,
-    c: "Hello world"
-};
-
-`;
