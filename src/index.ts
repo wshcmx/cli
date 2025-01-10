@@ -6,7 +6,9 @@ import { watch } from './commands/watch.js';
 
 const cwd = process.cwd();
 
-switch (process.argv.slice(2)[0]?.toLowerCase()) {
+const [ command ] = process.argv.slice(2);
+
+switch (command.toLowerCase()) {
   case 'build':
     build(cwd);
     break;

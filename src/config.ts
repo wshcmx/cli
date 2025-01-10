@@ -1,13 +1,13 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import ts from 'typescript';
 
 export function getTSConfig(cwd: string): ts.ParsedCommandLine {
-  const tsconfigPath = join(cwd, 'tsconfig.json');
+  const tsconfigPath = resolve(cwd, 'tsconfig.json');
 
   if (!existsSync(tsconfigPath)) {
-    console.error('There is no any configuration files. Execute npx tsc -init to create a new one.');
+    console.error(`There is no any configuration files at "${tsconfigPath}". Execute npx tsc -init to create a new one.`);
     process.exit(1);
   }
 
