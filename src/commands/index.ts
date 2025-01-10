@@ -1,7 +1,7 @@
-import { build } from "./build.js";
-import { help } from "./help.js";
-import { init } from "./init.js";
-import { watch } from "./watch.js";
+import { build } from './build.js';
+import { help } from './help.js';
+import { init } from './init.js';
+import { watch } from './watch.js';
 
 export type Command = {
   callback: Function,

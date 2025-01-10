@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts from 'typescript';
 
 export function convertTemplateStrings(): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {

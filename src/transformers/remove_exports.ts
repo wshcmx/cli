@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts from 'typescript';
 
 export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {

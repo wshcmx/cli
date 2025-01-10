@@ -1,4 +1,4 @@
-import { commands } from "./index.js";
+import { commands } from './index.js';
 
 export function help() {
   console.log(`\n@wshcmx/cli plugin - cli to work with WebSoft HCM easily!
