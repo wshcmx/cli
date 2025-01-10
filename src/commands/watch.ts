@@ -9,7 +9,6 @@ import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 
 export function watch(cwd: string) {
-  console.log(`🔨 Watching started`);
   const configuration = getTSConfig(cwd);
 
   const host = ts.createWatchCompilerHost(
@@ -32,18 +31,15 @@ export function watch(cwd: string) {
 
   host.createProgram = (rootNames, options, ...rest) => {
     const program = originalCreateProgram(rootNames, options, ...rest);
-    const emit = program.emit;
 
-    program.emit = () => {
-      return emit(undefined, undefined, undefined, undefined, {
-        before: [
-          removeExports(),
-          enumsToObjects(),
-          convertTemplateStrings(),
-          transformNamespaces(),
-        ]
-      })
-    };
+    program.emit(undefined, undefined, undefined, undefined, {
+      before: [
+        removeExports(),
+        enumsToObjects(),
+        convertTemplateStrings(),
+        transformNamespaces(),
+      ]
+    });
 
     return program;
   };
