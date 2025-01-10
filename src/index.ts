@@ -7,8 +7,16 @@ import { watch } from './commands/watch.js';
 const cwd = process.cwd();
 
 switch (process.argv.slice(2)[0]?.toLowerCase()) {
-  case 'init': init(cwd);
-  case 'build': build(cwd);
-  case 'watch': watch(cwd);
-  default: help();
+  case 'init':
+    init(cwd);
+    break;
+  case 'build':
+    build(cwd);
+    break;
+  case 'watch':
+    watch(cwd);
+    break;
+  default:
+    help();
+    break;
 }

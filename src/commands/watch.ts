@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import util from 'node:util';
 import { getTSConfig } from './config.js';
 import { enumsToObjects } from '../transformers/enums_to_objects.js';
 import { removeExports } from '../transformers/remove_exports.js';
@@ -6,28 +7,27 @@ import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 
 export function watch(cwd: string) {
-  console.log(`🔨 Building started`);
+  console.log(`🔨 Watching started`);
   const configuration = getTSConfig(cwd);
-  const createProgram = ts.createSemanticDiagnosticsBuilderProgram;
 
   const host = ts.createWatchCompilerHost(
       configuration.fileNames,
       configuration.options,
       ts.sys,
-      createProgram,
+      ts.createEmitAndSemanticDiagnosticsBuilderProgram,
       (diagnostic) => {
         if (diagnostic.file) {
           const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
           const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-          console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+          console.error(util.styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
         } else {
-          console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+          console.error(util.styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
         }
-      },
-      (diagnostic) => console.error(ts.formatDiagnostic(diagnostic, ts.createCompilerHost({}))),
+      }
   );
 
   const originalCreateProgram = host.createProgram;
+
   host.createProgram = (rootNames, options, ...rest) => {
     const program = originalCreateProgram(rootNames, options, ...rest);
     const emit = program.emit;
@@ -42,6 +42,7 @@ export function watch(cwd: string) {
         ]
       })
     };
+
     return program;
   };
 
