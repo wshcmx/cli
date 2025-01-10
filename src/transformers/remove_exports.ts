@@ -28,13 +28,7 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
       }
 
       if (ts.isImportDeclaration(node)) {
-        node = ts.factory.updateImportDeclaration(
-          node,
-          [],
-          node.importClause,
-          node.moduleSpecifier,
-          node.attributes
-        );
+        node = ts.factory.createEmptyStatement();
       }
 
       if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
