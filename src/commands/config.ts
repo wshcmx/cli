@@ -2,18 +2,6 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
 
-export type WshcmxConfiguration = {
-  postwatch?: (
-    action: 'add' | 'change' | 'unlink',
-    cwd: string,
-    code: string | null,
-    absInputFilepath: string,
-    absOutputFilepath: string
-  ) => void;
-}
-
-export const PLUGIN_CONFIG_FILE = 'wshcmx.config.js';
-
 export function getTSConfig(cwd: string): ts.ParsedCommandLine {
   const tsconfigPath = join(cwd, 'tsconfig.json');
 
