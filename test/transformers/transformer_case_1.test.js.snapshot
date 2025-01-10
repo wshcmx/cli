@@ -1,0 +1,3 @@
+exports[`Suite > Test 1`] = `
+"function callableFunction(argumentWithDefaultValue = 0) {\\n    return \\"Argument value is \\" + argumentWithDefaultValue + \\"\\";\\n}\\n"
+`;

@@ -2,7 +2,7 @@ import util from 'node:util';
 
 import ts from 'typescript';
 
-import { getTSConfig } from './config.js';
+import { getTSConfig } from '../config.js';
 import { enumsToObjects } from '../transformers/enums_to_objects.js';
 import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';

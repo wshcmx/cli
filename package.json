@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
-    "test": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
+    "test": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
+    "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'"
   },
   "bin": {
     "@wshcmx/cli": "dist/index.js"
