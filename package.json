@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "dist/index.js"
+    "start": "dist/index.js",
+    "test": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
   },
   "bin": {
     "@wshcmx/cli": "dist/index.js"
@@ -15,7 +16,7 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@types/node": "^22.8.0"

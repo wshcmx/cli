@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "Preserve",
+    "noLib": true,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": false,
+    "outDir": "dist",
+    "typeRoots": [
+      "node_modules/@wshcmx/types/lib",
+      "node_modules/@wshcmx/types/lib/xml"
+    ]
+  },
+  "files": [
+    "index.ts"
+  ]
+}

@@ -1,36 +1,20 @@
-import Watch from './watch.js';
-import Build from './build.js';
-import Init from './init.js';
-import { getTSConfig, getWshcmxConfig, wshcmxConfigFileName } from './config.js';
+import { help } from './commands/help.js';
+import { init } from './commands/init.js';
+import { build } from './commands/build.js';
+import { watch } from './commands/watch.js';
 
-const availableCommands = new Map([
-  ['watch', { callback: Watch, description: 'Watch for changes'}],
-  ['build', { callback: Build, description: 'Build the project'}],
-  ['init', { callback: Init, description: `Create a new "${wshcmxConfigFileName}" file`}],
-]);
-
-export default async function() {
+export async function cli() {
   const cwd = process.cwd();
-  const command = process.argv.slice(2)[0]?.toLowerCase() ?? 'help';
+  const command = process.argv.slice(2)[0]?.toLowerCase();
 
-  if (command === 'init') {
-    Init(cwd);
-    process.exit(0);
+  switch (command) {
+    case 'init':
+      return init(cwd);
+    case 'build':
+      return build(cwd);
+    case 'watch':
+      return watch(cwd);
+    default:
+      return help();
   }
-
-  if (command === 'help') {
-    console.log(`Available commands:\n\t${Array.from(availableCommands).map(x => `"${x[0]}" - ${x[1].description}`).join('\n\t')}`);
-    process.exit(0);
-  }
-
-  const wshcmxConfig = await getWshcmxConfig(cwd);
-  const tsConfig = await getTSConfig(cwd);
-
-  if (!availableCommands.has(command)) {
-    console.error(`Unknown command "${command}"`);
-    console.log(`Available commands:\n\t${Array.from(availableCommands).map(x => `"${x[0]}" - ${x[1].description}`).join('\n\t')}`);
-    process.exit(1);
-  }
-
-  availableCommands.get(command)?.callback(cwd, wshcmxConfig, tsConfig);
 }
