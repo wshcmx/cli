@@ -11,8 +11,13 @@
       "node_modules/@wshcmx/types/lib/xml"
     ]
   },
+  "include": [
+    "src/**/*"
+  ],
   "files": [
-    "index.ts",
-    "submodule.ts"
+    "lib/lib.ts"
+  ],
+  "exclude": [
+    "src/exclude_submodule.ts"
   ]
 }

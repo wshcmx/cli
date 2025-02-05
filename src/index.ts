@@ -8,7 +8,7 @@ const cwd = process.cwd();
 
 const [ command ] = process.argv.slice(2);
 
-switch (command.toLowerCase()) {
+switch (command?.toLowerCase()) {
   case 'build':
     build(cwd);
     break;

@@ -1,3 +1,5 @@
+import { globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import util from 'node:util';
 
 import ts from 'typescript';
@@ -9,6 +11,27 @@ import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters.js';
 import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
+
+function buildNonConfigFiles(configuration: ts.ParsedCommandLine) {
+  const { outDir } = configuration.options;
+
+  if (outDir === undefined) {
+    throw new Error('The outDir option is not set in the tsconfig.json file.');
+  }
+
+  const { exclude, files, include } = configuration.raw;
+
+  const entries = globSync([...(include ?? []), ...(files ?? [])])
+  .filter(x => !configuration.fileNames.includes(x))
+  .filter(x => !exclude?.includes(x))
+  .filter(x => statSync(x).isFile());
+
+  entries.forEach(x => {
+    const outputFilePath = resolve(outDir, x);
+    mkdirSync(dirname(outputFilePath));
+    writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
+  });
+}
 
 export function build(cwd: string) {
   console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
@@ -44,6 +67,7 @@ export function build(cwd: string) {
 
   convertUnicodeFiles(configuration.options.outDir);
   renameNamespaces(configuration.options.outDir);
+  buildNonConfigFiles(configuration)
   console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);
   process.exit(0);
 }
