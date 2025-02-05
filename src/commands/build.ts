@@ -34,8 +34,7 @@ function nonTsBuild(configuration: ts.ParsedCommandLine) {
 }
 
 function tsBuild(configuration: ts.ParsedCommandLine) {
-  const host = ts.createIncrementalCompilerHost(configuration.options);
-  const program = ts.createProgram(configuration.fileNames, configuration.options, host);
+  const program = ts.createProgram(configuration.fileNames, configuration.options);
 
   const emitResult = program.emit(undefined, undefined, undefined, undefined, {
     before: [
@@ -46,7 +45,9 @@ function tsBuild(configuration: ts.ParsedCommandLine) {
     ],
   });
 
-  emitResult.diagnostics.forEach(diagnostic => {
+  const diagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+
+  diagnostics.forEach(diagnostic => {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
