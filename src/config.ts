@@ -4,14 +4,14 @@ import { join, resolve } from 'node:path';
 import ts from 'typescript';
 
 export function getTSConfig(cwd: string): ts.ParsedCommandLine {
-  const tsconfigPath = resolve(cwd, 'tsconfig.json');
+  const tsconfigPath = ts.findConfigFile(cwd, ts.sys.fileExists, "tsconfig.json");
 
-  if (!existsSync(tsconfigPath)) {
-    console.error(`There is no any configuration files at "${tsconfigPath}". Execute npx tsc -init to create a new one.`);
+  if (!tsconfigPath) {
+    console.error(`There is no any configuration files at "${cwd}". Execute npx tsc -init to create a new one.`);
     process.exit(1);
   }
 
-  const { config, error } = ts.readConfigFile(join(cwd, 'tsconfig.json'), ts.sys.readFile);
+  const { config, error } = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
 
   if (error) {
     console.error(error.messageText);
@@ -28,5 +28,6 @@ export function getTSConfig(cwd: string): ts.ParsedCommandLine {
     process.exit(1);
   }
 
-  return configFileContent;
+  return configFileContent
+  ;
 }

@@ -12,7 +12,7 @@ import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters.js';
 import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
 
-function buildNonConfigFiles(configuration: ts.ParsedCommandLine) {
+function nonTsBuild(configuration: ts.ParsedCommandLine) {
   const { outDir } = configuration.options;
 
   if (outDir === undefined) {
@@ -22,22 +22,20 @@ function buildNonConfigFiles(configuration: ts.ParsedCommandLine) {
   const { exclude, files, include } = configuration.raw;
 
   const entries = globSync([...(include ?? []), ...(files ?? [])])
-  .filter(x => !configuration.fileNames.includes(x))
-  .filter(x => !exclude?.includes(x))
-  .filter(x => statSync(x).isFile());
+    .filter(x => !configuration.fileNames.includes(x))
+    .filter(x => !exclude?.includes(x))
+    .filter(x => statSync(x).isFile());
 
   entries.forEach(x => {
-    const outputFilePath = resolve(outDir, x);
+    const outputFilePath = resolve(configuration.options.outDir!, x);
     mkdirSync(dirname(outputFilePath), { recursive: true });
     writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
   });
 }
 
-export function build(cwd: string) {
-  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
-  const configuration = getTSConfig(cwd);
-
-  const program = ts.createProgram(configuration.fileNames, configuration.options);
+function tsBuild(configuration: ts.ParsedCommandLine) {
+  const host = ts.createIncrementalCompilerHost(configuration.options);
+  const program = ts.createProgram(configuration.fileNames, configuration.options, host);
 
   const emitResult = program.emit(undefined, undefined, undefined, undefined, {
     before: [
@@ -45,12 +43,10 @@ export function build(cwd: string) {
       enumsToObjects(),
       convertTemplateStrings(),
       transformNamespaces(),
-    ]
+    ],
   });
 
-  const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
-
-  allDiagnostics.forEach(diagnostic => {
+  emitResult.diagnostics.forEach(diagnostic => {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
@@ -60,14 +56,20 @@ export function build(cwd: string) {
     }
   });
 
-  if (emitResult.emitSkipped) {
+  if (!emitResult.emitSkipped) {
     console.error(util.styleText('red', 'Build process failed.'));
     process.exit(1);
   }
+}
 
+export function build(cwd: string) {
+  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
+  const configuration = getTSConfig(cwd);
+
+  tsBuild(configuration);
+  nonTsBuild(configuration);
   convertUnicodeFiles(configuration.options.outDir);
   renameNamespaces(configuration.options.outDir);
-  buildNonConfigFiles(configuration)
   console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);
   process.exit(0);
 }
