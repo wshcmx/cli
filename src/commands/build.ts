@@ -28,7 +28,7 @@ function buildNonConfigFiles(configuration: ts.ParsedCommandLine) {
 
   entries.forEach(x => {
     const outputFilePath = resolve(outDir, x);
-    mkdirSync(dirname(outputFilePath));
+    mkdirSync(dirname(outputFilePath), { recursive: true });
     writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
   });
 }
