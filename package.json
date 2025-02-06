@@ -4,6 +4,9 @@
   "main": "dist/index.js",
   "type": "module",
   "repository": "github:wshcmx/cli",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
@@ -21,6 +24,6 @@
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^22.8.0"
+    "@types/node": "^22.0.0"
   }
 }
