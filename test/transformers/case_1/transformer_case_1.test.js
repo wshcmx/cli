@@ -4,11 +4,11 @@ import { test, suite } from 'node:test';
 
 import ts from 'typescript';
 
-import { getTSConfig } from '../../dist/core/config.js';
-import { removeExports } from '../../dist/transformers/remove_exports.js';
-import { enumsToObjects } from '../../dist/transformers/enums_to_objects.js';
-import { convertTemplateStrings } from '../../dist/transformers/template_strings.js';
-import { transformNamespaces } from '../../dist/transformers/transform_namespaces.js';
+import { getTSConfig } from '../../../dist/core/config.js';
+import { removeExports } from '../../../dist/transformers/remove_exports.js';
+import { enumsToObjects } from '../../../dist/transformers/enums_to_objects.js';
+import { convertTemplateStrings } from '../../../dist/transformers/template_strings.js';
+import { transformNamespaces } from '../../../dist/transformers/transform_namespaces.js';
 
 suite('Suite', () => {
   const code = readFileSync(join(import.meta.dirname, 'transformer_case_1.ts'), 'utf-8');
