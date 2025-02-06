@@ -16,6 +16,9 @@
   "bin": {
     "@wshcmx/cli": "dist/index.js"
   },
+  "imports": {
+    "#dist/*": "./dist/*"
+  },
   "keywords": [
     "wshcmx",
     "wshcmx/cli",
