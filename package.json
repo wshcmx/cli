@@ -16,10 +16,17 @@
   "bin": {
     "@wshcmx/cli": "dist/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "wshcmx",
+    "wshcmx/cli",
+    "cli",
+    "WebSoftHCM",
+    "wt",
+    "webtutor"
+  ],
+  "author": "umbrik",
   "license": "MIT",
-  "description": "",
+  "description": "Набор CLI-инструментов предназначен для автоматизации сборки и отслеживания изменений в исходном коде с последующей транспиляцией в синтаксис WebSoftHCM.",
   "dependencies": {
     "typescript": "^5.7.3"
   },
