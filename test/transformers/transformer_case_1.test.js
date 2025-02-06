@@ -4,7 +4,7 @@ import { test, suite } from 'node:test';
 
 import ts from 'typescript';
 
-import { getTSConfig } from '../../dist/config.js';
+import { getTSConfig } from '../../dist/core/config.js';
 import { removeExports } from '../../dist/transformers/remove_exports.js';
 import { enumsToObjects } from '../../dist/transformers/enums_to_objects.js';
 import { convertTemplateStrings } from '../../dist/transformers/template_strings.js';
