@@ -1,6 +1,6 @@
 import { globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import util from 'node:util';
+import { styleText } from 'node:util';
 
 import ts from 'typescript';
 
@@ -13,7 +13,7 @@ import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters
 import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
 import { args, ArgsFlags } from '../core/args.js';
 
-function nonTsBuild(configuration: ts.ParsedCommandLine) {
+function buildNonTsFiles(configuration: ts.ParsedCommandLine) {
   const { outDir } = configuration.options;
 
   if (outDir === undefined) {
@@ -34,7 +34,7 @@ function nonTsBuild(configuration: ts.ParsedCommandLine) {
   });
 }
 
-function tsBuild(configuration: ts.ParsedCommandLine) {
+function buildTsFiles(configuration: ts.ParsedCommandLine) {
   const program = ts.createProgram(configuration.fileNames, configuration.options);
 
   const emitResult = program.emit(undefined, undefined, undefined, undefined, {
@@ -55,14 +55,14 @@ function tsBuild(configuration: ts.ParsedCommandLine) {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      console.error(util.styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+      console.error(styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
     } else {
-      console.error(util.styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+      console.error(styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
     }
   });
 
   if (emitResult.emitSkipped) {
-    console.error(util.styleText('red', 'Build process failed.'));
+    console.error(styleText('red', 'Build process failed.'));
     process.exit(1);
   }
 }
@@ -71,10 +71,10 @@ export function build(cwd: string) {
   console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
   const configuration = getTSConfig(cwd);
 
-  tsBuild(configuration);
+  buildTsFiles(configuration);
 
   if (args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
-    nonTsBuild(configuration);
+    buildNonTsFiles(configuration);
   }
 
   convertUnicodeFiles(configuration.options.outDir);
