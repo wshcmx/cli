@@ -4,13 +4,14 @@ import util from 'node:util';
 
 import ts from 'typescript';
 
-import { getTSConfig } from '../config.js';
+import { getTSConfig } from '../core/config.js';
 import { enumsToObjects } from '../transformers/enums_to_objects.js';
 import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters.js';
 import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
+import { args, ArgsFlags } from '../core/args.js';
 
 function nonTsBuild(configuration: ts.ParsedCommandLine) {
   const { outDir } = configuration.options;
@@ -45,7 +46,10 @@ function tsBuild(configuration: ts.ParsedCommandLine) {
     ],
   });
 
-  const diagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+  const diagnostics = [
+    ...ts.getPreEmitDiagnostics(program),
+    ...emitResult.diagnostics
+  ];
 
   diagnostics.forEach(diagnostic => {
     if (diagnostic.file) {
@@ -57,7 +61,7 @@ function tsBuild(configuration: ts.ParsedCommandLine) {
     }
   });
 
-  if (!emitResult.emitSkipped) {
+  if (emitResult.emitSkipped) {
     console.error(util.styleText('red', 'Build process failed.'));
     process.exit(1);
   }
@@ -68,7 +72,11 @@ export function build(cwd: string) {
   const configuration = getTSConfig(cwd);
 
   tsBuild(configuration);
-  nonTsBuild(configuration);
+
+  if (args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
+    nonTsBuild(configuration);
+  }
+
   convertUnicodeFiles(configuration.options.outDir);
   renameNamespaces(configuration.options.outDir);
   console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);

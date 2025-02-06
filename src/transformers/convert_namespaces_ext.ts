@@ -1,5 +1,5 @@
-import { basename, join } from 'node:path';
-import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { existsSync, readdirSync, readFileSync, renameSync } from 'node:fs';
 
 export function renameNamespaces(outDir: string | undefined) {
   if (outDir === undefined || !existsSync(outDir)) {

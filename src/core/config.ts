@@ -1,6 +1,3 @@
-import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-
 import ts from 'typescript';
 
 export function getTSConfig(cwd: string): ts.ParsedCommandLine {
