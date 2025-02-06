@@ -1,3 +1,3 @@
 exports[`Suite > Test 1`] = `
-"function callableFunction(argumentWithDefaultValue = 0) {\\n    return \\"Argument value is \\" + argumentWithDefaultValue + \\"\\";\\n}\\n"
+"function callableFunction(argumentWithDefaultValue = 0) {\\n    return \\"Argument value is \\" + argumentWithDefaultValue + \\"\\";\\n}\\nvar EntityTypes = {\\n    Type1: \\"Type_1\\",\\n    Type2: \\"Type_2\\",\\n    Type3: \\"Type_3\\"\\n};\\n"
 `;
