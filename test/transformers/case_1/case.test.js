@@ -11,7 +11,7 @@ import { convertTemplateStrings } from '#dist/transformers/template_strings.js';
 import { transformNamespaces } from '#dist/transformers/transform_namespaces.js';
 
 suite('Suite', () => {
-  const code = readFileSync(join(import.meta.dirname, 'transformer_case_1.ts'), 'utf-8');
+  const code = readFileSync(join(import.meta.dirname, 'case.ts'), 'utf-8');
 
   test('Test', (t) => {
     const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
