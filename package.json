@@ -14,7 +14,7 @@
     "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'"
   },
   "bin": {
-    "@wshcmx/cli": "dist/index.js"
+    "wshcmx": "dist/index.js"
   },
   "imports": {
     "#dist/*": "./dist/*"

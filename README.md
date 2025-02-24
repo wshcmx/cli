@@ -13,9 +13,9 @@
 
 ```bash
 # установка локально в проект
-npm install @wshcmx/cli -D
+npm install wshcmx -D
 # или глобально
-npm install @wshcmx/cli -g
+npm install wshcmx -g
 ```
 
 2. Запустите сборку:
@@ -23,8 +23,7 @@ npm install @wshcmx/cli -g
 Выполняет одноразовую сборку проекта
 
 ```bash
-npx cli build # если установили локально
-npx @wshcmx/cli build # если установили глобально
+npx wshcmx build
 ```
 
 3. Запустите режим отслеживания:
@@ -32,8 +31,7 @@ npx @wshcmx/cli build # если установили глобально
 Запускает CLI-инструмент в режиме отслеживания, при котором изменения в исходном коде будут автоматически транспилироваться.
 
 ```bash
-npx cli watch # если установили локально
-npx @wshcmx/cli watch # если установили глобально
+npx wshcmx watch
 ```
 
 ### Флаги
