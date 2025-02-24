@@ -14,7 +14,7 @@ export function renameNamespaces(outDir: string | undefined) {
     if (filePath.endsWith('.js')) {
       let content = readFileSync(filePath, 'utf-8');
 
-      if (content.startsWith('"META:NAMESPACE:')) {
+      if (content.indexOf('"META:NAMESPACE:') > 0) {
         renameSync(filePath, filePath.replace('.js', '.bs'));
       }
     }

@@ -15,7 +15,7 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
           node.body,
         );
       }
-    
+
       if (ts.isExportDeclaration(node) && node.modifiers) {
         node = ts.factory.updateExportDeclaration(
           node as ts.ExportDeclaration,
