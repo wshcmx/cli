@@ -70,7 +70,7 @@ function buildTsFiles(configuration: ts.ParsedCommandLine) {
 
 export function build(cwd: string) {
   console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
-  const configuration = getTSConfig(cwd);
+  const configuration = getTSConfig(cwd, args.getArg('project'));
 
   buildTsFiles(configuration);
 

@@ -1,7 +1,7 @@
 import ts from 'typescript';
 
-export function getTSConfig(cwd: string): ts.ParsedCommandLine {
-  const tsconfigPath = ts.findConfigFile(cwd, ts.sys.fileExists, "tsconfig.json");
+export function getTSConfig(cwd: string, project: string = "tsconfig.json"): ts.ParsedCommandLine {
+  const tsconfigPath = ts.findConfigFile(cwd, ts.sys.fileExists, project);
 
   if (!tsconfigPath) {
     console.error(`There is no any configuration files at "${cwd}". Execute npx tsc -init to create a new one.`);
