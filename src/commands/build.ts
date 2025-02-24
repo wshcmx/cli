@@ -1,5 +1,5 @@
 import { globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { styleText } from 'node:util';
 
 import ts from 'typescript';
@@ -14,7 +14,7 @@ import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
 import { args, ArgsFlags } from '../core/args.js';
 
 function buildNonTsFiles(configuration: ts.ParsedCommandLine) {
-  const { outDir } = configuration.options;
+  const { outDir, rootDir } = configuration.options;
 
   if (outDir === undefined) {
     throw new Error('The outDir option is not set in the tsconfig.json file.');
@@ -28,7 +28,8 @@ function buildNonTsFiles(configuration: ts.ParsedCommandLine) {
     .filter(x => statSync(x).isFile());
 
   entries.forEach(x => {
-    const outputFilePath = resolve(configuration.options.outDir!, x);
+    const filePath = rootDir ? relative(rootDir, x) : x;
+    const outputFilePath = resolve(configuration.options.outDir!, filePath);
     mkdirSync(dirname(outputFilePath), { recursive: true });
     writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
   });
