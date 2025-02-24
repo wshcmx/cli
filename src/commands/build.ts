@@ -1,66 +1,15 @@
-import { globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { styleText } from 'node:util';
 
 import ts from 'typescript';
 
-import { getTSConfig } from '../core/config.js';
-import { enumsToObjects } from '../transformers/enums_to_objects.js';
-import { removeExports } from '../transformers/remove_exports.js';
-import { convertTemplateStrings } from '../transformers/template_strings.js';
-import { transformNamespaces } from '../transformers/transform_namespaces.js';
-import { convertUnicodeFiles } from '../transformers/retain_non_ascii_characters.js';
-import { renameNamespaces } from '../transformers/convert_namespaces_ext.js';
 import { args, ArgsFlags } from '../core/args.js';
-
-function buildNonTsFiles(configuration: ts.ParsedCommandLine) {
-  const { outDir, rootDir } = configuration.options;
-
-  if (outDir === undefined) {
-    throw new Error('The outDir option is not set in the tsconfig.json file.');
-  }
-
-  const { exclude, files, include } = configuration.raw;
-
-  const entries = globSync([...(include ?? []), ...(files ?? [])])
-    .filter(x => !configuration.fileNames.includes(x))
-    .filter(x => !exclude?.includes(x))
-    .filter(x => statSync(x).isFile());
-
-  entries.forEach(x => {
-    const filePath = rootDir ? relative(rootDir, x) : x;
-    const outputFilePath = resolve(configuration.options.outDir!, filePath);
-    mkdirSync(dirname(outputFilePath), { recursive: true });
-    writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
-  });
-}
+import { after, buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.js';
+import { getTSConfig } from '../core/config.js';
 
 function buildTsFiles(configuration: ts.ParsedCommandLine) {
-  const program = ts.createProgram(configuration.fileNames, configuration.options);
-
-  const emitResult = program.emit(undefined, undefined, undefined, undefined, {
-    before: [
-      removeExports(),
-      enumsToObjects(),
-      convertTemplateStrings(),
-      transformNamespaces(),
-    ],
-  });
-
-  const diagnostics = [
-    ...ts.getPreEmitDiagnostics(program),
-    ...emitResult.diagnostics
-  ];
-
-  diagnostics.forEach(diagnostic => {
-    if (diagnostic.file) {
-      const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
-      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      console.error(styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
-    } else {
-      console.error(styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
-    }
-  });
+  const emitResult = buildTypescriptFiles(configuration.fileNames, configuration.options);
 
   if (emitResult.emitSkipped) {
     console.error(styleText('red', 'Build process failed.'));
@@ -75,11 +24,18 @@ export function build(cwd: string) {
   buildTsFiles(configuration);
 
   if (args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
-    buildNonTsFiles(configuration);
+    const { rootDir, outDir } = configuration.options;
+    const entries = collectNonTypescriptFiles(configuration);
+
+    entries.forEach(x => {
+      const filePath = rootDir ? relative(rootDir, x) : x;
+      const outputFilePath = resolve(outDir!, filePath);
+      mkdirSync(dirname(outputFilePath), { recursive: true });
+      writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
+    });
   }
 
-  convertUnicodeFiles(configuration.options.outDir);
-  renameNamespaces(configuration.options.outDir);
+  after(configuration.options.outDir);
   console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);
   process.exit(0);
 }
