@@ -7,7 +7,7 @@ import { buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.j
 import { getTSConfig } from '../core/config.js';
 
 export function build(cwd: string) {
-  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
+  console.log(styleText('greenBright', `🔨 ${new Date().toLocaleTimeString()} Building started`));
   const configuration = getTSConfig(cwd, args.getArg('project'));
 
   const emitResult = buildTypescriptFiles(configuration.fileNames, configuration.options);
@@ -29,6 +29,6 @@ export function build(cwd: string) {
     });
   }
 
-  console.error(styleText('greenBright', `✅ ${new Date().toLocaleTimeString()} Build finished`));
+  console.log(styleText('greenBright', `✅ ${new Date().toLocaleTimeString()} Build finished`));
   process.exit(0);
 }
