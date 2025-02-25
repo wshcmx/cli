@@ -25,6 +25,5 @@ export function getTSConfig(cwd: string, project: string = 'tsconfig.json'): ts.
     process.exit(1);
   }
 
-  return configFileContent
-  ;
+  return configFileContent;
 }

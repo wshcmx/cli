@@ -1,5 +1,4 @@
-import { globSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { globSync, statSync } from 'node:fs';
 import { styleText } from 'node:util';
 
 import ts from 'typescript';
@@ -28,7 +27,9 @@ export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOp
       }
 
       // Decode non ASCII characters
-      data = decodeUnicodeEscapes(data);
+      data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
+        return String.fromCharCode(parseInt(match.substr(2), 16));
+      });
     }
 
     originalWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
@@ -59,20 +60,6 @@ export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOp
   });
 
   return emitResult;
-}
-
-function decodeUnicodeEscapes(str: string): string {
-  return str.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
-    return String.fromCharCode(parseInt(match.substr(2), 16));
-  });
-}
-
-function collectFiles(fileOrOutDir: string) {
-  if (statSync(fileOrOutDir).isDirectory()) {
-    return readdirSync(fileOrOutDir, { recursive: true, encoding: 'utf-8' }).map(x => join(fileOrOutDir, x.toString()));
-  } else {
-    return [fileOrOutDir];
-  }
 }
 
 export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
