@@ -1,4 +1,4 @@
-import { Document, submoduleFunction } from "./submodule";
+import { Document, submoduleFunction } from './submodule';
 
 export function callableFunction(argumentWithDefaultValue = 0) {
   return `Argument value is ${argumentWithDefaultValue}`;

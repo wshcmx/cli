@@ -3,7 +3,7 @@ export function callableFunction(argumentWithDefaultValue = 0) {
 }
 
 export enum EntityTypes {
-  Type1 = "Type_1",
-  Type2 = "Type_2",
-  Type3 = "Type_3"
+  Type1 = 'Type_1',
+  Type2 = 'Type_2',
+  Type3 = 'Type_3'
 }
