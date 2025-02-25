@@ -1,4 +1,4 @@
-import { existsSync, globSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { globSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { styleText } from 'node:util';
 
@@ -11,8 +11,30 @@ import { transformNamespaces } from '../transformers/transform_namespaces.js';
 
 export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOptions) {
   const program = ts.createProgram(fileNames, options);
+  const host = ts.createCompilerHost(program.getCompilerOptions());
+  const originalWriteFile = host.writeFile;
 
-  const emitResult = program.emit(undefined, undefined, undefined, undefined, {
+  host.writeFile = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+    if (fileName.endsWith('.js')) {
+      // Convert namespaces
+      if (data.indexOf('"META:NAMESPACE:') !== -1) {
+        fileName = fileName.replace('.js', '.bs');
+      }
+
+      // Add aspnet render tag
+      if (data.indexOf('/// @html') !== -1) {
+        data = `<%\n// <script>\n${data}\n%>`;
+        fileName = fileName.replace('.js', '.html');
+      }
+
+      // Decode non ASCII characters
+      data = decodeUnicodeEscapes(data);
+    }
+
+    originalWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+  };
+
+  const emitResult = program.emit(undefined, host.writeFile, undefined, undefined, {
     before: [
       removeExports(),
       enumsToObjects(),
@@ -39,54 +61,18 @@ export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOp
   return emitResult;
 }
 
-function renameNamespaces(outDir: string | undefined) {
-  if (outDir === undefined || !existsSync(outDir)) {
-    return;
-  }
-
-  const files = readdirSync(outDir, { recursive: true });
-
-  files.forEach((file) => {
-    const filePath = join(outDir, file.toString());
-
-    if (filePath.endsWith('.js')) {
-      let content = readFileSync(filePath, 'utf-8');
-
-      if (content.indexOf('"META:NAMESPACE:') > 0) {
-        renameSync(filePath, filePath.replace('.js', '.bs'));
-      }
-    }
-  });
-}
-
 function decodeUnicodeEscapes(str: string): string {
   return str.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
     return String.fromCharCode(parseInt(match.substr(2), 16));
   });
 }
 
-function convertUnicodeFiles(outDir: string | undefined) {
-  if (outDir === undefined || !existsSync(outDir)) {
-    return;
+function collectFiles(fileOrOutDir: string) {
+  if (statSync(fileOrOutDir).isDirectory()) {
+    return readdirSync(fileOrOutDir, { recursive: true, encoding: 'utf-8' }).map(x => join(fileOrOutDir, x.toString()));
+  } else {
+    return [fileOrOutDir];
   }
-
-  const files = readdirSync(outDir, { recursive: true });
-
-  files.forEach((file) => {
-    const filePath = join(outDir, file.toString());
-
-    if (filePath.endsWith('.js')) {
-      let content = readFileSync(filePath, 'utf-8');
-
-      content = decodeUnicodeEscapes(content);
-      writeFileSync(filePath, content, 'utf-8');
-    }
-  });
-}
-
-export function after(outDir: string | undefined) {
-  convertUnicodeFiles(outDir);
-  renameNamespaces(outDir);
 }
 
 export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {

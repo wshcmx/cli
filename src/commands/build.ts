@@ -2,26 +2,20 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { styleText } from 'node:util';
 
-import ts from 'typescript';
-
 import { args, ArgsFlags } from '../core/args.js';
-import { after, buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.js';
+import { buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.js';
 import { getTSConfig } from '../core/config.js';
 
-function buildTsFiles(configuration: ts.ParsedCommandLine) {
+export function build(cwd: string) {
+  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
+  const configuration = getTSConfig(cwd, args.getArg('project'));
+
   const emitResult = buildTypescriptFiles(configuration.fileNames, configuration.options);
 
   if (emitResult.emitSkipped) {
     console.error(styleText('red', 'Build process failed.'));
     process.exit(1);
   }
-}
-
-export function build(cwd: string) {
-  console.log(`🔨 ${new Date().toLocaleTimeString()} Building started`);
-  const configuration = getTSConfig(cwd, args.getArg('project'));
-
-  buildTsFiles(configuration);
 
   if (args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
     const { rootDir, outDir } = configuration.options;
@@ -35,7 +29,6 @@ export function build(cwd: string) {
     });
   }
 
-  after(configuration.options.outDir);
-  console.log(`✅ ${new Date().toLocaleTimeString()} Build finished`);
+  console.error(styleText('greenBright', `✅ ${new Date().toLocaleTimeString()} Build finished`));
   process.exit(0);
 }

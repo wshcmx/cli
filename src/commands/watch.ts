@@ -5,7 +5,7 @@ import ts from 'typescript';
 
 import { getTSConfig } from '../core/config.js';
 import { args } from '../core/args.js';
-import { after, buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.js';
+import { buildTypescriptFiles, collectNonTypescriptFiles } from '../core/build.js';
 import { styleText } from 'node:util';
 
 function watchNonTsFiles(configuration: ts.ParsedCommandLine) {
@@ -20,6 +20,7 @@ function watchNonTsFiles(configuration: ts.ParsedCommandLine) {
       if (event === 'change') {
         mkdirSync(dirname(outputFilePath), { recursive: true });
         writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
+        console.error(styleText('greenBright', `🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`));
       }
     });
   });
@@ -39,5 +40,4 @@ export function watch(cwd: string) {
   });
 
   watchNonTsFiles(configuration);
-  after(configuration.options.outDir);
 }
