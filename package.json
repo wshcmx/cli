@@ -1,6 +1,6 @@
 {
   "name": "@wshcmx/cli",
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0-alpha.3",
   "main": "dist/index.js",
   "type": "module",
   "repository": "github:wshcmx/cli",
@@ -10,9 +10,9 @@
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
-    "test:project": "npx tsc && npm test -w ./test/project",
-    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
-    "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'"
+    "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'",
+    "test:project": "npx tsc && npm test --script-shell=bash -w ./test/project",
+    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
   },
   "workspaces": [
     "./test/project"

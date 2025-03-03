@@ -1,4 +1,5 @@
 import { globSync, statSync } from 'node:fs';
+import { normalize } from 'node:path';
 import { styleText } from 'node:util';
 
 import ts from 'typescript';
@@ -70,9 +71,11 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   }
 
   const { exclude, files, include } = configuration.raw;
+  const fileNames = configuration.fileNames.map(normalize);
+  const normalizedExclude = exclude.map(normalize);
 
   return globSync([...(include ?? []), ...(files ?? [])])
-    .filter(x => !configuration.fileNames.includes(x))
-    .filter(x => !exclude?.includes(x))
+    .filter(x => !fileNames.includes(x))
+    .filter(x => !normalizedExclude?.includes(x))
     .filter(x => statSync(x).isFile());
 }

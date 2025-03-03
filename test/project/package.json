@@ -2,7 +2,9 @@
   "scripts": {
     "build": "wshcmx build --include-non-ts-files",
     "start": "wshcmx watch",
-    "test": "npm install && npm run build && [[ $(find dist/* -name \"*.ts\" | wc -l) ]] && exit 1 || exit 0"
+    "pretest": "rm -rf dist && npm install",
+    "test": "npm run build",
+    "posttest": "[[ $(find dist/* -name \"*.ts\" | wc -l) -gt 0 ]] && exit 1 || exit 0"
   },
   "dependencies": {
     "@wshcmx/cli": "file:../..",
