@@ -1,14 +1,9 @@
 {
-  "name": "project",
-  "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "start": "cli watch"
+    "build": "wshcmx build --include-non-ts-files",
+    "start": "wshcmx watch",
+    "test": "npm install && npm run build && [[ $(find dist/* -name \"*.ts\" | wc -l) ]] && exit 1 || exit 0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@wshcmx/cli": "file:../..",
     "@wshcmx/types": "^11.0.0-beta1"

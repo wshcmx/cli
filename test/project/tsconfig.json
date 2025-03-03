@@ -7,8 +7,8 @@
     "allowSyntheticDefaultImports": false,
     "outDir": "dist",
     "typeRoots": [
-      "node_modules/@wshcmx/types/lib",
-      "node_modules/@wshcmx/types/lib/xml"
+      "./../../node_modules/@wshcmx/types/lib",
+      "./../../node_modules/@wshcmx/types/lib/xml"
     ]
   },
   "include": [

@@ -10,9 +10,13 @@
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
-    "test": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
+    "test:project": "npx tsc && npm test -w ./test/project",
+    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
     "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'"
   },
+  "workspaces": [
+    "./test/project"
+  ],
   "bin": {
     "wshcmx": "dist/index.js"
   },
@@ -22,7 +26,6 @@
   "keywords": [
     "wshcmx",
     "wshcmx/cli",
-    "cli",
     "WebSoftHCM",
     "wt",
     "webtutor"
