@@ -1,5 +1,5 @@
-import { globSync, statSync } from 'node:fs';
-import { normalize } from 'node:path';
+import { globSync, mkdirSync, readFileSync, statSync, watch, WatchEventType, writeFileSync } from 'node:fs';
+import { dirname, normalize, relative, resolve } from 'node:path';
 import { styleText } from 'node:util';
 
 import ts from 'typescript';
@@ -12,42 +12,13 @@ import { transformNamespaces } from '../transformers/transform_namespaces.js';
 export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOptions) {
   const program = ts.createProgram(fileNames, options);
   const host = ts.createCompilerHost(program.getCompilerOptions());
-  const originalWriteFile = host.writeFile;
 
-  host.writeFile = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
-    if (fileName.endsWith('.js')) {
-      // Convert namespaces
-      if (data.indexOf('"META:NAMESPACE:') !== -1) {
-        fileName = fileName.replace('.js', '.bs');
-      }
-
-      // Add aspnet render tag
-      if (data.indexOf('/// @html') !== -1) {
-        data = `<%\n// <script>\n${data}\n%>`;
-        fileName = fileName.replace('.js', '.html');
-      }
-
-      // Decode non ASCII characters
-      data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
-        return String.fromCharCode(parseInt(match.substr(2), 16));
-      });
-    }
-
-    originalWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
-  };
-
-  const emitResult = program.emit(undefined, host.writeFile, undefined, undefined, {
-    before: [
-      removeExports(),
-      enumsToObjects(),
-      convertTemplateStrings(),
-      transformNamespaces(),
-    ],
-  });
+  decorateHostWriteFile(host);
+  const emitResult = decorateProgramEmit(host, program);
 
   const diagnostics = [
     ...ts.getPreEmitDiagnostics(program),
-    ...emitResult.diagnostics
+    ...emitResult!.diagnostics
   ];
 
   diagnostics.forEach(diagnostic => {
@@ -78,4 +49,101 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
     .filter(x => !fileNames.includes(x))
     .filter(x => !normalizedExclude?.includes(x))
     .filter(x => statSync(x).isFile());
+}
+
+function reportDiagnostic(diagnostic: ts.Diagnostic) {
+  if (diagnostic.file) {
+    const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+    console.error(styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+  } else {
+    console.error(styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+  }
+}
+
+function decorateHostWriteFile(host: ts.CompilerHost) {
+  const originalWriteFile = host.writeFile;
+
+  host.writeFile = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+    if (fileName.endsWith('.js')) {
+      // Convert namespaces
+      if (data.indexOf('"META:NAMESPACE:') !== -1) {
+        fileName = fileName.replace('.js', '.bs');
+      }
+
+      // Add aspnet render tag
+      if (data.indexOf('/// @html') !== -1) {
+        data = `<%\n// <script>\n${data}\n%>`;
+        fileName = fileName.replace('.js', '.html');
+      }
+
+      // Decode non ASCII characters
+      data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
+        return String.fromCharCode(parseInt(match.substr(2), 16));
+      });
+    }
+
+    originalWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+  };
+}
+
+function decorateProgramEmit(host: ts.CompilerHost, program?: ts.SemanticDiagnosticsBuilderProgram | ts.Program) {
+  return program?.emit(undefined, host.writeFile, undefined, undefined, {
+    before: [
+      removeExports(),
+      enumsToObjects(),
+      convertTemplateStrings(),
+      transformNamespaces()
+    ],
+  });
+}
+
+function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
+  console.info(ts.formatDiagnostic(diagnostic, {
+    getCanonicalFileName: path => path,
+    getCurrentDirectory: ts.sys.getCurrentDirectory,
+    getNewLine: () => ts.sys.newLine,
+  }));
+}
+
+export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {9
+  const host = ts.createWatchCompilerHost(
+    configuration.fileNames,
+    configuration.options,
+    ts.sys,
+    ts.createSemanticDiagnosticsBuilderProgram,
+    reportDiagnostic,
+    reportWatchStatusChanged
+  );
+
+  const origCreateProgram = host.createProgram;
+
+  host.createProgram = (rootNames: ReadonlyArray<string> = [], options, host, oldProgram) => {
+    if (host) {
+      decorateHostWriteFile(host);
+      decorateProgramEmit(host, oldProgram);
+    }
+
+    return origCreateProgram(rootNames, options, host, oldProgram);
+  };
+
+  ts.createWatchProgram(host);
+}
+
+export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
+  const { rootDir, outDir } = configuration.options;
+  const entries = collectNonTypescriptFiles(configuration);
+
+  entries.forEach(x => {
+    const filePath = rootDir ? relative(rootDir, x) : x;
+    const outputFilePath = resolve(outDir!, filePath);
+
+    watch(resolve(x), (event: WatchEventType) => {
+      if (event == 'change') {
+        mkdirSync(dirname(outputFilePath), { recursive: true });
+        writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
+        console.error(styleText('greenBright', `🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`));
+      }
+    });
+  });
 }

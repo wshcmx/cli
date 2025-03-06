@@ -12,7 +12,7 @@ export function build(cwd: string) {
 
   const emitResult = buildTypescriptFiles(configuration.fileNames, configuration.options);
 
-  if (emitResult.emitSkipped) {
+  if (emitResult!.emitSkipped) {
     console.error(styleText('red', 'Build process failed.'));
     process.exit(1);
   }
