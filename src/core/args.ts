@@ -1,39 +1,39 @@
 export enum ArgsFlags {
-    INCLUDE_NON_TS_FILES = 'include-non-ts-files'
+  INCLUDE_NON_TS_FILES = 'include-non-ts-files'
 }
 
 class ArgsParser {
-    #command: string = '';
-    #argv: string[] = [];
+  #command: string = '';
+  #argv: string[] = [];
 
-    constructor() {
-        this.#parse();
+  constructor() {
+    this.#parse();
+  }
+
+  getArg(argName: string) {
+    const args = process.argv.slice(2);
+
+    for (let i = 0; i < args.length; i++) {
+      const x = args[i];
+
+      if (x.startsWith('--') && x.slice(2) === argName) {
+        return args[i + 1];
+      }
     }
+  }
 
-    getArg(argName: string) {
-        const args = process.argv.slice(2);
+  getCommand() {
+    return this.#command;
+  }
 
-        for (let i = 0; i < args.length; i++) {
-            const x = args[i];
+  has(argumentName: ArgsFlags) {
+    return this.#argv.includes(argumentName);
+  }
 
-            if (x.startsWith('--') && x.slice(2) === argName) {
-                return args[i + 1];
-            }
-        }
-    }
-
-    getCommand() {
-        return this.#command;
-    }
-
-    has(argumentName: ArgsFlags) {
-        return this.#argv.includes(argumentName);
-    }
-
-    #parse() {
-        this.#command = process.argv.slice(2)[0];
-        this.#argv = process.argv.slice(3).filter(x => x.startsWith('--')).map(x => x.slice(2));
-    }
+  #parse() {
+    this.#command = process.argv.slice(2)[0];
+    this.#argv = process.argv.slice(3).filter(x => x.startsWith('--')).map(x => x.slice(2));
+  }
 }
 
 export const args = new ArgsParser();
