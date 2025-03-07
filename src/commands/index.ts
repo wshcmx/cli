@@ -8,7 +8,7 @@ export type Command = {
 };
 
 export const commands = new Map<string, Command>([
-  ['watch', { callback: watch, description: 'Watching for changes'}],
   ['build', { callback: build, description: 'Building the project'}],
-  ['help', { callback: help, description: 'Plugin help description' }]
+  ['help', { callback: help, description: 'Plugin help description' }],
+  ['watch', { callback: watch, description: 'Watching for changes'}],
 ]);

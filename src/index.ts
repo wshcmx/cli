@@ -1,20 +1,15 @@
 #!/usr/bin/env node
 
 import { args } from './core/args.js';
-import { build } from './commands/build.js';
+import { commands } from './commands/index.js';
 import { help } from './commands/help.js';
-import { watch } from './commands/watch.js';
 
 const cwd = process.cwd();
 
-switch (args.getCommand()) {
-  case 'build':
-    build(cwd);
-    break;
-  case 'watch':
-    watch(cwd);
-    break;
-  default:
-    help();
-    break;
+const command = commands.get(args.getCommand());
+
+if (command) {
+  command.callback(cwd);
+} else {
+  help();
 }
