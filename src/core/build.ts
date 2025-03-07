@@ -112,7 +112,7 @@ export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {
     configuration.fileNames,
     configuration.options,
     ts.sys,
-    ts.createSemanticDiagnosticsBuilderProgram,
+    ts.createEmitAndSemanticDiagnosticsBuilderProgram,
     reportDiagnostic,
     reportWatchStatusChanged
   );
@@ -120,12 +120,10 @@ export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const origCreateProgram = host.createProgram;
 
   host.createProgram = (rootNames: ReadonlyArray<string> = [], options, host, oldProgram) => {
-    if (host) {
-      decorateHostWriteFile(host);
-      decorateProgramEmit(host, oldProgram);
-    }
-
-    return origCreateProgram(rootNames, options, host, oldProgram);
+    decorateHostWriteFile(host!);
+    const program = origCreateProgram(rootNames, options, host, oldProgram);
+    decorateProgramEmit(host!, program);
+    return program;
   };
 
   ts.createWatchProgram(host);
