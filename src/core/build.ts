@@ -107,7 +107,7 @@ function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
   }));
 }
 
-export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {9
+export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const host = ts.createWatchCompilerHost(
     configuration.fileNames,
     configuration.options,
