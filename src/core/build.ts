@@ -8,9 +8,10 @@ import { enumsToObjects } from '../transformers/enums_to_objects.js';
 import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
+import { args, ArgsFlags } from './args.js';
 
-export function buildTypescriptFiles(fileNames: string[], options: ts.CompilerOptions) {
-  const program = ts.createProgram(fileNames, options);
+export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
+  const program = ts.createProgram(configuration.fileNames, configuration.options);
   const host = ts.createCompilerHost(program.getCompilerOptions());
 
   decorateHostWriteFile(host);
@@ -131,6 +132,10 @@ export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {9
 }
 
 export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
+  if (!args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
+    return;
+  }
+
   const { rootDir, outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
@@ -145,5 +150,21 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
         console.error(styleText('greenBright', `🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`));
       }
     });
+  });
+}
+
+export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
+  if (!args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
+    return;
+  }
+
+  const { rootDir, outDir } = configuration.options;
+  const entries = collectNonTypescriptFiles(configuration);
+
+  entries.forEach(x => {
+    const filePath = rootDir ? relative(rootDir, x) : x;
+    const outputFilePath = resolve(outDir!, filePath);
+    mkdirSync(dirname(outputFilePath), { recursive: true });
+    writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
   });
 }
