@@ -1,6 +1,5 @@
-import { globSync, mkdirSync, readFileSync, statSync, watch, WatchEventType, writeFileSync } from 'node:fs';
+import fs from 'node:fs';
 import { dirname, normalize, relative, resolve } from 'node:path';
-import { styleText } from 'node:util';
 
 import ts from 'typescript';
 
@@ -9,6 +8,7 @@ import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { args, ArgsFlags } from './args.js';
+import { logger } from './logger.js';
 
 export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const program = ts.createProgram(configuration.fileNames, configuration.options);
@@ -26,9 +26,9 @@ export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      console.error(styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+      logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
     } else {
-      console.error(styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+      logger.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
     }
   });
 
@@ -42,23 +42,27 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
     throw new Error('The outDir option is not set in the tsconfig.json file.');
   }
 
+  if (process.versions.node.split('.')[0] < '22') {
+    throw new Error('The watch mode for non TypeScript files is available only since Node.js v22');
+  }
+
   const { exclude, files, include } = configuration.raw;
   const fileNames = configuration.fileNames.map(normalize);
   const normalizedExclude = exclude.map(normalize);
 
-  return globSync([...(include ?? []), ...(files ?? [])])
+  return fs.globSync([...(include ?? []), ...(files ?? [])])
     .filter(x => !fileNames.includes(x))
     .filter(x => !normalizedExclude?.includes(x))
-    .filter(x => statSync(x).isFile());
+    .filter(x => fs.statSync(x).isFile());
 }
 
 function reportDiagnostic(diagnostic: ts.Diagnostic) {
   if (diagnostic.file) {
     const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-    console.error(styleText('red', `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`));
+    logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
   } else {
-    console.error(styleText('red', ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')));
+    logger.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
   }
 }
 
@@ -141,11 +145,11 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
 
-    watch(resolve(x), (event: WatchEventType) => {
+    fs.watch(resolve(x), (event: fs.WatchEventType) => {
       if (event == 'change') {
-        mkdirSync(dirname(outputFilePath), { recursive: true });
-        writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
-        console.error(styleText('greenBright', `🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`));
+        fs.mkdirSync(dirname(outputFilePath), { recursive: true });
+        fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
+        logger.success(`🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`);
       }
     });
   });
@@ -162,7 +166,7 @@ export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   entries.forEach(x => {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
-    mkdirSync(dirname(outputFilePath), { recursive: true });
-    writeFileSync(outputFilePath, readFileSync(resolve(x), 'utf-8'));
+    fs.mkdirSync(dirname(outputFilePath), { recursive: true });
+    fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
   });
 }
