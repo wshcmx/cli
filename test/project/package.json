@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "wshcmx build --include-non-ts-files",
+    "build": "wshcmx build --include-non-ts-files --retain-imports-in-comments",
     "start": "wshcmx watch",
     "pretest": "rm -rf dist && npm install",
     "test": "npm run build",
