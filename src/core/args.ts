@@ -13,15 +13,7 @@ class ArgsParser {
   }
 
   getArg(argName: string) {
-    const args = process.argv.slice(2);
-
-    for (let i = 0; i < args.length; i++) {
-      const x = args[i];
-
-      if (x.startsWith('--') && x.slice(2) === argName) {
-        return args[i + 1];
-      }
-    }
+    return process.argv.slice(2).find(x => x.startsWith('--') && x.slice(2) === argName);
   }
 
   getCommand() {
