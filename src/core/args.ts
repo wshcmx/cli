@@ -1,5 +1,7 @@
 export enum ArgsFlags {
   INCLUDE_NON_TS_FILES = 'include-non-ts-files',
+  RETAIN_IMPORTS_IN_COMMENTS = 'retain-imports-in-comments',
+  RETAIN_IMPORTS_AS_SEMICOLONS = 'retain-imports-as-semicolons',
   RETAIN_NON_ASCII_CHARACTERS = 'retain-non-ascii-characters',
 }
 

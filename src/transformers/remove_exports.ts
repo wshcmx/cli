@@ -1,5 +1,7 @@
 import ts from 'typescript';
 
+import { args, ArgsFlags } from '../core/args.js';
+
 export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {
     function visit(node: ts.Node): ts.Node {
@@ -28,7 +30,22 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
       }
 
       if (ts.isImportDeclaration(node)) {
-        node = ts.factory.createEmptyStatement();
+        if (args.has(ArgsFlags.RETAIN_IMPORTS_IN_COMMENTS)) {
+          const commentedStatement = ts.factory.createNotEmittedStatement(node);
+          ts.addSyntheticLeadingComment(
+            commentedStatement,
+            ts.SyntaxKind.SingleLineCommentTrivia,
+            ` ${node.getFullText()}`,
+            false
+          );
+          node = commentedStatement;
+        } else if (args.has(ArgsFlags.RETAIN_IMPORTS_AS_SEMICOLONS)) {
+          return ts.factory.createEmptyStatement();
+        } else {
+          if (ts.isImportDeclaration(node)) {
+            return ts.factory.createNotEmittedStatement(node);
+          }
+        }
       }
 
       if (ts.isTypeAliasDeclaration(node) && node.modifiers) {
