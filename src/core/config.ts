@@ -1,4 +1,5 @@
 import ts from 'typescript';
+
 import { logger } from './logger.js';
 
 export function getTSConfig(cwd: string, project: string = 'tsconfig.json'): ts.ParsedCommandLine {
