@@ -1,5 +1,6 @@
 export enum ArgsFlags {
-  INCLUDE_NON_TS_FILES = 'include-non-ts-files'
+  INCLUDE_NON_TS_FILES = 'include-non-ts-files',
+  RETAIN_NON_ASCII_CHARACTERS = 'retain-non-ascii-characters',
 }
 
 class ArgsParser {

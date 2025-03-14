@@ -82,10 +82,12 @@ function decorateHostWriteFile(host: ts.CompilerHost) {
         fileName = fileName.replace('.js', '.html');
       }
 
-      // Decode non ASCII characters
-      data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
-        return String.fromCharCode(parseInt(match.substr(2), 16));
-      });
+      if (!args.has(ArgsFlags.RETAIN_NON_ASCII_CHARACTERS)) {
+        // Decode non ASCII characters
+        data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
+          return String.fromCharCode(parseInt(match.substr(2), 16));
+        });
+      }
     }
 
     originalWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
