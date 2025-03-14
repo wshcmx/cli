@@ -48,7 +48,7 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
 
   const { exclude, files, include } = configuration.raw;
   const fileNames = configuration.fileNames.map(normalize);
-  const normalizedExclude = exclude.map(normalize);
+  const normalizedExclude = (exclude ?? []).map(normalize);
 
   return fs.globSync([...(include ?? []), ...(files ?? [])])
     .filter(x => !fileNames.includes(x))
