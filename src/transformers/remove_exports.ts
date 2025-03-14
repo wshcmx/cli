@@ -30,7 +30,7 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
       }
 
       if (ts.isImportDeclaration(node)) {
-        if (args.has(ArgsFlags.RETAIN_IMPORTS_IN_COMMENTS)) {
+        if (args.has(ArgsFlags.RETAIN_IMPORTS_AS_COMMENTS)) {
           const commentedStatement = ts.factory.createNotEmittedStatement(node);
           ts.addSyntheticLeadingComment(
             commentedStatement,
@@ -39,12 +39,8 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
             false
           );
           node = commentedStatement;
-        } else if (args.has(ArgsFlags.RETAIN_IMPORTS_AS_SEMICOLONS)) {
-          return ts.factory.createEmptyStatement();
         } else {
-          if (ts.isImportDeclaration(node)) {
-            return ts.factory.createNotEmittedStatement(node);
-          }
+          return ts.factory.createNotEmittedStatement(node);
         }
       }
 
