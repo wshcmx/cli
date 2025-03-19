@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "@wshcmx/cli": "file:../..",
-    "@wshcmx/types": "^11.0.0-beta1"
+    "@wshcmx/types": "^11.0.0-rc.1"
   }
 }
