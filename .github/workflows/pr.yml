@@ -6,20 +6,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm install
       - name: Check for changes after npm i
+        shell: bash
         run: "[[ `git status --porcelain` ]] && exit 1 || exit 0"
       - name: Check package version
+        shell: bash
         run: |
           localVersion=$(cat package.json | jq -r '.version')
           masterVersion=$(git show origin/main:package.json | jq -r '.version')
           [ "${localVersion}" = "`echo -e "${localVersion}\n${masterVersion}" | sort -V | head -n1`" ] && echo 'Package version should be upgraded' && exit 1 || exit 0
       - run: npm run build
+      - run: npm test
+        shell: bash

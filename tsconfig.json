@@ -5,6 +5,8 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,

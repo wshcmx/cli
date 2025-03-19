@@ -1,23 +1,43 @@
 {
   "name": "@wshcmx/cli",
-  "version": "1.7.0",
+  "version": "2.0.0-alpha.7",
   "main": "dist/index.js",
   "type": "module",
+  "repository": "github:wshcmx/cli",
+  "engines": {
+    "node": ">= 14.17"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "dist/index.js"
+    "start": "dist/index.js",
+    "test": "npm run test:project && npm run test:snapshots",
+    "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'",
+    "test:project": "npx tsc && npm test --script-shell=bash -w ./test/project",
+    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
   },
+  "workspaces": [
+    "./test/project"
+  ],
   "bin": {
-    "@wshcmx/cli": "dist/index.js"
+    "wshcmx": "dist/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "imports": {
+    "#dist/*": "./dist/*"
+  },
+  "keywords": [
+    "wshcmx",
+    "wshcmx/cli",
+    "WebSoftHCM",
+    "wt",
+    "webtutor"
+  ],
+  "author": "umbrik",
   "license": "MIT",
-  "description": "",
+  "description": "Набор CLI-инструментов предназначен для автоматизации сборки и отслеживания изменений в исходном коде с последующей транспиляцией в синтаксис WebSoftHCM.",
   "dependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^22.8.0"
+    "@types/node": "^22.0.0"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build": "wshcmx build --include-non-ts-files --retain-imports-in-comments",
+    "start": "wshcmx watch",
+    "pretest": "rm -rf dist && npm install",
+    "test": "npm run build",
+    "posttest": "[[ $(find dist/* -name \"*.ts\" | wc -l) -gt 0 ]] && exit 1 || exit 0"
+  },
+  "dependencies": {
+    "@wshcmx/cli": "file:../..",
+    "@wshcmx/types": "^11.0.0-rc.1"
+  }
+}
