@@ -7,7 +7,13 @@ export function build(cwd: string) {
   logger.success(`🔨 ${new Date().toLocaleTimeString()} Project building started`);
   const configuration = getTSConfig(cwd, args.getArg('project'));
 
-  buildTypescriptFiles(configuration);
+  const result = buildTypescriptFiles(configuration);
+
+  if (result?.emitSkipped) {
+    logger.error(`❌ ${new Date().toLocaleTimeString()} Project building failed`);
+    process.exit(1);
+  }
+
   buildNonTypescriptFiles(configuration);
 
   logger.success(`✅ ${new Date().toLocaleTimeString()} Project building finished`);
