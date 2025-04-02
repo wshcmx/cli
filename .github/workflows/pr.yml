@@ -5,6 +5,15 @@ on:
     branches: [ "main" ]
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check package version
+        shell: bash
+        run: ./.github/scripts/check-version.sh
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -12,8 +21,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -21,9 +28,6 @@ jobs:
       - name: Check for changes after npm i
         shell: bash
         run: "[[ `git status --porcelain` ]] && exit 1 || exit 0"
-      - name: Check package version
-        shell: bash
-        run: ./.github/scripts/check-version.sh
       - run: npm run build
       - run: npm test
         shell: bash
