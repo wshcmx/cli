@@ -26,7 +26,9 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
-      - run: npm ci --omit=dev --ignore-scripts
+      - run: |
+          npm set-script prepare ""
+          npm ci --omit=dev
       - run: npm run build
       - run: npm publish
         env:
