@@ -14,7 +14,7 @@
     "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'",
     "test:project": "npx tsc && npm test --script-shell=bash -w ./test/project",
     "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
-    "prepare": "husky || true"
+    "prepare": "husky"
   },
   "workspaces": [
     "./test/project"
