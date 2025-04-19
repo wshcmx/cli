@@ -1,11 +1,11 @@
-import { args } from '../core/args.js';
+import { args, ArgsFlags } from '../core/args.js';
 import { buildNonTypescriptFiles, buildTypescriptFiles } from '../core/build.js';
 import { getTSConfig } from '../core/config.js';
 import { logger } from '../core/logger.js';
 
 export function build(cwd: string) {
   logger.success(`🔨 ${new Date().toLocaleTimeString()} Project building started`);
-  const configuration = getTSConfig(cwd, args.getArg('project'));
+  const configuration = getTSConfig(args.get(ArgsFlags.PROJECT) ?? cwd);
 
   const result = buildTypescriptFiles(configuration);
 
