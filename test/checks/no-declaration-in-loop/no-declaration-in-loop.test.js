@@ -16,36 +16,50 @@ suite('Suite', () => {
   test('Test no-const-declaration-in-loop.ts', (t) => {
     const code = readFileSync(join(import.meta.dirname, 'no-const-declaration-in-loop.ts'), 'utf-8');
     const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
-    const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+    const sourceFile = ts.createSourceFile('no-const-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
       ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
     } catch (error) {
-      equal(error.message, "Variable declaration (const) not allowed inside loop");
+      equal(error.message, "no-const-declaration-in-loop.ts(3,5): error: Variable declaration (const) not allowed inside loop");
     }
   });
 
   test('Test no-let-declaration-in-loop.ts', (t) => {
     const code = readFileSync(join(import.meta.dirname, 'no-let-declaration-in-loop.ts'), 'utf-8');
     const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
-    const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+    const sourceFile = ts.createSourceFile('no-let-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
       ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
     } catch (error) {
-      equal(error.message, "Variable declaration (let) not allowed inside loop");
+      equal(error.message, "no-let-declaration-in-loop.ts(3,5): error: Variable declaration (let) not allowed inside loop");
     }
   });
 
   test('Test no-var-declaration-in-loop.ts', (t) => {
     const code = readFileSync(join(import.meta.dirname, 'no-var-declaration-in-loop.ts'), 'utf-8');
     const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
-    const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+    const sourceFile = ts.createSourceFile('no-var-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
       ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
     } catch (error) {
-      equal(error.message, "Variable declaration (var) not allowed inside loop");
+      equal(error.message, "no-var-declaration-in-loop.ts(3,5): error: Variable declaration (var) not allowed inside loop");
     }
+  });
+
+  test('Test with diagnostic handler', (t) => {
+    const code = readFileSync(join(import.meta.dirname, 'no-const-declaration-in-loop.ts'), 'utf-8');
+    const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
+    const sourceFile = ts.createSourceFile('test-diagnostic.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+
+    const diagnostics = [];
+    ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop((d) => diagnostics.push(d))], configuration.options);
+
+    equal(diagnostics.length, 1);
+    equal(diagnostics[0].messageText, 'Variable declaration (const) not allowed inside loop');
+    equal(diagnostics[0].category, ts.DiagnosticCategory.Error);
+    equal(diagnostics[0].code, 9001);
   });
 });

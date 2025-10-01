@@ -1,8 +1,8 @@
 import ts from 'typescript';
 
-export function noDeclarationInLoop(): ts.TransformerFactory<ts.SourceFile> {
+export function noDeclarationInLoop(onDiagnostic: (diagnostic: ts.Diagnostic) => void): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {
-    function visit(node: ts.Node) {
+    function visit(node: ts.Node): ts.Node {
       // Check if this is a variable declaration inside a loop
       if (ts.isVariableStatement(node)) {
         const parent = node.parent;
@@ -24,9 +24,14 @@ export function noDeclarationInLoop(): ts.TransformerFactory<ts.SourceFile> {
               ? "let"
               : "var";
 
-          throw new Error(
-            `Variable declaration (${kind}) not allowed inside loop`
-          );
+          onDiagnostic({
+            file: sourceFile,
+            start: node.getStart(),
+            length: node.getWidth(),
+            messageText: `Variable declaration (${kind}) not allowed inside loop`,
+            category: ts.DiagnosticCategory.Error,
+            code: 9001,
+          });
         }
       }
 

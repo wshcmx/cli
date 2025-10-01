@@ -102,7 +102,7 @@ function decorateProgramEmit(host: ts.CompilerHost, program?: ts.SemanticDiagnos
       enumsToObjects(),
       convertTemplateStrings(),
       transformNamespaces(),
-      noDeclarationInLoop()
+      noDeclarationInLoop(reportDiagnostic)
     ],
   });
 }
