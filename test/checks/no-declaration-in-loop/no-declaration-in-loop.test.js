@@ -11,6 +11,17 @@ import { enumsToObjects } from '#dist/transformers/enums_to_objects.js';
 import { convertTemplateStrings } from '#dist/transformers/template_strings.js';
 import { transformNamespaces } from '#dist/transformers/transform_namespaces.js';
 import { noDeclarationInLoop } from '#dist/checks/no-declaration-in-loop.js';
+import { logger } from '#dist/core/logger.js';
+
+function reportDiagnostic(diagnostic) {
+  if (diagnostic.file) {
+    const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+    logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+  } else {
+    logger.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+  }
+}
 
 suite('Suite', () => {
   test('Test no-const-declaration-in-loop.ts', (t) => {
@@ -19,7 +30,7 @@ suite('Suite', () => {
     const sourceFile = ts.createSourceFile('no-const-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
-      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
+      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop(reportDiagnostic)], configuration.options);
     } catch (error) {
       equal(error.message, "no-const-declaration-in-loop.ts(3,5): error: Variable declaration (const) not allowed inside loop");
     }
@@ -31,7 +42,7 @@ suite('Suite', () => {
     const sourceFile = ts.createSourceFile('no-let-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
-      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
+      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop(reportDiagnostic)], configuration.options);
     } catch (error) {
       equal(error.message, "no-let-declaration-in-loop.ts(3,5): error: Variable declaration (let) not allowed inside loop");
     }
@@ -43,7 +54,7 @@ suite('Suite', () => {
     const sourceFile = ts.createSourceFile('no-var-declaration-in-loop.ts', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     try {
-      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop()], configuration.options);
+      ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(), noDeclarationInLoop(reportDiagnostic)], configuration.options);
     } catch (error) {
       equal(error.message, "no-var-declaration-in-loop.ts(3,5): error: Variable declaration (var) not allowed inside loop");
     }
