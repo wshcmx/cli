@@ -7,6 +7,7 @@ import { enumsToObjects } from '../transformers/enums_to_objects.js';
 import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
+import { noDeclarationInLoop } from '../checks/no-declaration-in-loop.js';
 import { args, ArgsFlags } from './args.js';
 import { logger } from './logger.js';
 
@@ -100,7 +101,8 @@ function decorateProgramEmit(host: ts.CompilerHost, program?: ts.SemanticDiagnos
       removeExports(),
       enumsToObjects(),
       convertTemplateStrings(),
-      transformNamespaces()
+      transformNamespaces(),
+      noDeclarationInLoop()
     ],
   });
 }
