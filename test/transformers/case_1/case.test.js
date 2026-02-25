@@ -14,7 +14,7 @@ suite('Suite', () => {
   const code = readFileSync(join(import.meta.dirname, 'case.ts'), 'utf-8');
 
   test('Test', (t) => {
-    const configuration = getTSConfig(join(import.meta.dirname, '..', 'project'));
+    const configuration = getTSConfig(join(import.meta.dirname, '..', '..', 'project'));
     const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
     const result = ts.transform(sourceFile, [removeExports(), enumsToObjects(), convertTemplateStrings(), transformNamespaces(),], configuration.options);
     const transformedSourceFile = result.transformed[0];

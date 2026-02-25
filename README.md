@@ -4,11 +4,13 @@
 Инструменты полезны для разработчиков, которые работают с WebSoftHCM и хотят упростить процесс разработки, обеспечивая быструю и корректную работу с исходным кодом.
 
 ## Основные возможности
+
 - Сборка проекта: Выполняет полную сборку, преобразуя исходный код в совместимый с WebSoftHCM формат.
 - Отслеживание изменений: Запускает процесс транспиляции автоматически при изменении исходных файлов, что помогает мгновенно видеть результаты в реальном времени.
 - Транспиляция в WebSoftHCM синтаксис: Преобразует современный JavaScript или TypeScript в код, поддерживаемый WebSoftHCM, с учетом всех его особенностей.
 
 ## Как использовать
+
 1. Установите CLI-инструмент локально в проект при необходимости:
 
 ```bash
@@ -34,14 +36,16 @@ npx wshcmx build
 npx wshcmx watch
 ```
 
-## Флаги
-CLI поддерживает флаги:
+## Параметры
 
-| Флаг | Описание |
-| - | - |
-| **--include-non-ts-files** | Добавляет копирование файлов с любым расширением **не _js_/_ts_**.\ Файлы обрабатываются по логике **include**, **files** и **exclude** в **tsconfig.json** |
-| **--retain-non-ascii-characters** | Декодирует не ASCII символы после транспиляции |
-| **--retain-imports-as-comments** | Оставляет импорты в комментариях |
+CLI поддерживает параметры:
+
+| Флаг                              | Описание                                                                                                                                                    |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **--project**| Директория, в которой хранится tsconfig.json или путь до самого файла конфигурации |
+| **--include-non-ts-files**        | Добавляет копирование файлов с любым расширением **не _js_/_ts_**.\ Файлы обрабатываются по логике **include**, **files** и **exclude** в **tsconfig.json** |
+| **--retain-non-ascii-characters** | Декодирует не ASCII символы после транспиляции                                                                                                              |
+| **--retain-imports-as-comments**  | Оставляет импорты в комментариях                                                                                                                            |
 
 ## Основные особенности
 
@@ -53,7 +57,7 @@ TypeScript позволяет из коробки пользоваться не�
 
 ```ts
 function method(argument: string = "default string") {
-    // ...
+  // ...
 }
 ```
 
@@ -93,7 +97,7 @@ var Locales = {
 import { wshcmx } from "@wshcmx/lib";
 
 export function method() {
-    // ...
+  // ...
 }
 
 // -->
@@ -120,7 +124,6 @@ alert("I insisted that substring be ".concat(stringState));
 
 CLI конвертирует это в формат, похожий на TypeScript до 4.4.4.
 
-
 ```ts
 var stringState = "interpolated";
 alert(`I insisted that substring be ${stringState}`);
@@ -134,22 +137,23 @@ alert("I insisted that substring be " + stringState + "");
 
 ```ts
 export namespace Module {
-    export const VARIABLE = "VARIABLE_VALUES";
-    export function method() {
-        // ...
-    }
+  export const VARIABLE = "VARIABLE_VALUES";
+  export function method() {
+    // ...
+  }
 }
 
 // -->
 
-"META:NAMESPACE:Module";
+("META:NAMESPACE:Module");
 var VARIABLE = "VARIABLE_VALUES";
 function method() {
-    // ...
+  // ...
 }
 ```
 
 ## Контрибуция
+
 Контрибуции приветствуются! Пожалуйста, создайте Pull Request или свяжитесь с нами через Issues, если у вас есть предложения или обнаружены ошибки.
 
 ## Лицензия: MIT
