@@ -1,6 +1,5 @@
 !dist/
 .github/
-.husky/
 node_modules/
 test/
 src/

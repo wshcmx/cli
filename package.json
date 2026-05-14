@@ -13,8 +13,7 @@
     "test": "npm run test:project && npm run test:snapshots",
     "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'",
     "test:project": "npx tsc && npm test --script-shell=bash -w ./test/project",
-    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'",
-    "prepare": "husky"
+    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
   },
   "workspaces": [
     "./test/project"
@@ -40,7 +39,6 @@
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "husky": "^9.1.7"
+    "@types/node": "^22.0.0"
   }
 }
