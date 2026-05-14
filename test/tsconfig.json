@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "allowJs": false,
+    "lib": ["ESNext"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "types": []
+  },
+  "include": [
+    "../node_modules/@wshcmx/types/lib/**/*.d.ts",
+    "**/*.ts",
+    "**/*.d.ts"
+  ]
+}

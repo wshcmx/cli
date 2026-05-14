@@ -10,9 +10,10 @@
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
-    "test": "npm run test:project && npm run test:snapshots",
-    "test:generate": "npx tsc && node --test --test-update-snapshots \"**/*.test.js\"",
+    "test": "npm run test:typecheck && npm run test:project && npm run test:snapshots",
+    "test:generate": "npx tsc && npm run test:typecheck && node --test --test-update-snapshots \"**/*.test.js\"",
     "test:project": "npx tsc && npm test -w ./test/project",
+    "test:typecheck": "npx tsc -p test/tsconfig.json",
     "test:snapshots": "npx tsc && node --test --experimental-test-snapshots \"**/*.test.js\""
   },
   "workspaces": [
