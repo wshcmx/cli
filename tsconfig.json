@@ -10,7 +10,9 @@
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "./dist"
   },
   "include": [
     "src/**/*"

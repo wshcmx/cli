@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { dirname, normalize, relative, resolve } from 'node:path';
+import { dirname, extname, normalize, relative, resolve } from 'node:path';
 
 import ts from 'typescript';
 
@@ -48,13 +48,23 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   }
 
   const { exclude, files, include } = configuration.raw;
-  const fileNames = configuration.fileNames.map(normalize);
-  const normalizedExclude = (exclude ?? []).map(normalize);
+  const configFilePath = typeof configuration.options.configFilePath === 'string'
+    ? configuration.options.configFilePath
+    : resolve('tsconfig.json');
+  const configDirectoryPath = dirname(configFilePath);
+  const includePatterns = Array.isArray(include) ? include.filter((pattern): pattern is string => typeof pattern === 'string') : [];
+  const filePatterns = Array.isArray(files) ? files.filter((pattern): pattern is string => typeof pattern === 'string') : [];
+  const excludePatterns = Array.isArray(exclude) ? exclude.filter((pattern): pattern is string => typeof pattern === 'string') : [];
+  const fileNames = new Set(configuration.fileNames.map((fileName) => normalize(fileName)));
+  const normalizedExclude = new Set(excludePatterns.map((filePath) => normalize(resolve(configDirectoryPath, filePath))));
+  const compilableExtensions = new Set(['.js', '.jsx', '.ts', '.tsx']);
 
-  return fs.globSync([...(include ?? []), ...(files ?? [])])
-    .filter(x => !fileNames.includes(x))
-    .filter(x => !normalizedExclude?.includes(x))
-    .filter(x => fs.statSync(x).isFile());
+  return fs.globSync([...includePatterns, ...filePatterns], { cwd: configDirectoryPath })
+    .map((filePath: string) => normalize(resolve(configDirectoryPath, filePath)))
+    .filter((filePath: string) => !fileNames.has(filePath))
+    .filter((filePath: string) => !normalizedExclude.has(filePath))
+    .filter((filePath: string) => !compilableExtensions.has(extname(filePath)))
+    .filter((filePath: string) => fs.statSync(filePath).isFile());
 }
 
 function reportDiagnostic(diagnostic: ts.Diagnostic) {
@@ -145,7 +155,7 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const { rootDir, outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
-  entries.forEach(x => {
+  entries.forEach((x: string) => {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
 
@@ -167,7 +177,7 @@ export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const { rootDir, outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
-  entries.forEach(x => {
+  entries.forEach((x: string) => {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
     fs.mkdirSync(dirname(outputFilePath), { recursive: true });

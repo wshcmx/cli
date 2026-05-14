@@ -1,10 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES5",
+    "target": "esnext",
     "module": "Preserve",
-    "noLib": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": false,
     "outDir": "dist",
     "typeRoots": [
       "./../../node_modules/@wshcmx/types/lib",
