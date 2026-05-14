@@ -11,9 +11,9 @@
     "build": "tsc",
     "start": "dist/index.js",
     "test": "npm run test:project && npm run test:snapshots",
-    "test:generate": "npx tsc && node --test --test-update-snapshots '**/*.test.js'",
-    "test:project": "npx tsc && npm test --script-shell=bash -w ./test/project",
-    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots '**/*.test.js'"
+    "test:generate": "npx tsc && node --test --test-update-snapshots \"**/*.test.js\"",
+    "test:project": "npx tsc && npm test -w ./test/project",
+    "test:snapshots": "npx tsc && node --test --experimental-test-snapshots \"**/*.test.js\""
   },
   "workspaces": [
     "./test/project"
@@ -35,10 +35,10 @@
   "license": "MIT",
   "description": "Набор CLI-инструментов предназначен для автоматизации сборки и отслеживания изменений в исходном коде с последующей транспиляцией в синтаксис WebSoftHCM.",
   "dependencies": {
-    "@wshcmx/types": "^11.0.9",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "@wshcmx/types": "^12.1.0"
   }
 }
