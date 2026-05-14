@@ -1,64 +1,109 @@
 import { strictEqual } from 'node:assert';
-import { resolve } from 'node:path';
-import { test, suite } from 'node:test';
+import { suite, test } from 'node:test';
 
-import { ArgsParser } from '#dist/core/args.js';
+const argsModuleUrl = new URL('../../../dist/core/args.js', import.meta.url);
+let importCounter = 0;
 
-suite('ArgsParser.getArg', () => {
-  test('returns undefined when project argument is omitted', () => {
-    const originalArgv = process.argv;
-    process.argv = ['node', 'cli', 'build'];
+async function loadArgs(argv) {
+  const originalArgv = process.argv;
 
-    try {
-      strictEqual(new ArgsParser().getArg('project'), undefined);
-    } finally {
-      process.argv = originalArgv;
-    }
+  process.argv = argv;
+
+  try {
+    return await import(`${argsModuleUrl.href}?test=${importCounter += 1}`);
+  } finally {
+    process.argv = originalArgv;
+  }
+}
+
+suite('args parser', () => {
+  test('uses defaults when no command or flags are provided', async () => {
+    const { args, command } = await loadArgs([
+      'node',
+      'wshcmx',
+    ]);
+
+    strictEqual(command, '');
+    strictEqual(args.help, false);
+    strictEqual(args.version, false);
+    strictEqual(args.project, 'tsconfig.json');
+    strictEqual(args['include-non-ts-files'], false);
+    strictEqual(args['retain-imports-as-comments'], false);
+    strictEqual(args['retain-non-ascii-characters'], false);
   });
 
-  test('reads a relative project argument from a separate value', () => {
-    const originalArgv = process.argv;
-    process.argv = ['node', 'cli', 'build', '--project', 'configs/custom.tsconfig.json'];
+  test('parses the positional command', async () => {
+    const { command } = await loadArgs([
+      'node',
+      'wshcmx',
+      'build',
+    ]);
 
-    try {
-      strictEqual(new ArgsParser().getArg('project'), 'configs/custom.tsconfig.json');
-    } finally {
-      process.argv = originalArgv;
-    }
+    strictEqual(command, 'build');
   });
 
-  test('reads an absolute project argument from a separate value', () => {
-    const originalArgv = process.argv;
-    const absolutePath = resolve('test', 'core', 'config', 'fixture', 'configs', 'custom.tsconfig.json');
-    process.argv = ['node', 'cli', 'build', '--project', absolutePath];
+  test('parses help from long and short flags', async () => {
+    const fromLong = await loadArgs([
+      'node',
+      'wshcmx',
+      '--help',
+    ]);
+    const fromShort = await loadArgs([
+      'node',
+      'wshcmx',
+      '-h',
+    ]);
 
-    try {
-      strictEqual(new ArgsParser().getArg('project'), absolutePath);
-    } finally {
-      process.argv = originalArgv;
-    }
+    strictEqual(fromLong.args.help, true);
+    strictEqual(fromShort.args.help, true);
   });
 
-  test('reads a relative project argument from equals syntax', () => {
-    const originalArgv = process.argv;
-    process.argv = ['node', 'cli', 'build', '--project=configs/custom.tsconfig.json'];
+  test('parses version from long and short flags', async () => {
+    const fromLong = await loadArgs([
+      'node',
+      'wshcmx',
+      '--version',
+    ]);
+    const fromShort = await loadArgs([
+      'node',
+      'wshcmx',
+      '-v',
+    ]);
 
-    try {
-      strictEqual(new ArgsParser().getArg('project'), 'configs/custom.tsconfig.json');
-    } finally {
-      process.argv = originalArgv;
-    }
+    strictEqual(fromLong.args.version, true);
+    strictEqual(fromShort.args.version, true);
   });
 
-  test('reads an absolute project argument from equals syntax', () => {
-    const originalArgv = process.argv;
-    const absolutePath = resolve('test', 'core', 'config', 'fixture', 'configs', 'custom.tsconfig.json');
-    process.argv = ['node', 'cli', 'build', `--project=${absolutePath}`];
+  test('parses project from long and short options', async () => {
+    const fromLong = await loadArgs([
+      'node',
+      'wshcmx',
+      '--project',
+      'configs\\custom.tsconfig.json',
+    ]);
+    const fromShort = await loadArgs([
+      'node',
+      'wshcmx',
+      '-p',
+      'configs\\short.tsconfig.json',
+    ]);
 
-    try {
-      strictEqual(new ArgsParser().getArg('project'), absolutePath);
-    } finally {
-      process.argv = originalArgv;
-    }
+    strictEqual(fromLong.args.project, 'configs\\custom.tsconfig.json');
+    strictEqual(fromShort.args.project, 'configs\\short.tsconfig.json');
+  });
+
+  test('parses all supported boolean build flags', async () => {
+    const { args } = await loadArgs([
+      'node',
+      'wshcmx',
+      'build',
+      '--include-non-ts-files',
+      '--retain-imports-as-comments',
+      '--retain-non-ascii-characters',
+    ]);
+
+    strictEqual(args['include-non-ts-files'], true);
+    strictEqual(args['retain-imports-as-comments'], true);
+    strictEqual(args['retain-non-ascii-characters'], true);
   });
 });

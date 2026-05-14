@@ -152,11 +152,12 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
     return;
   }
 
-  const { rootDir, outDir } = configuration.options;
+  const sourceRootPath = getSourceRootPath(configuration);
+  const { outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
   entries.forEach((x: string) => {
-    const filePath = rootDir ? relative(rootDir, x) : x;
+    const filePath = relative(sourceRootPath, x);
     const outputFilePath = resolve(outDir!, filePath);
 
     fs.watch(resolve(x), (event: fs.WatchEventType) => {
@@ -174,13 +175,27 @@ export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
     return;
   }
 
-  const { rootDir, outDir } = configuration.options;
+  const sourceRootPath = getSourceRootPath(configuration);
+  const { outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
   entries.forEach((x: string) => {
-    const filePath = rootDir ? relative(rootDir, x) : x;
+    const filePath = relative(sourceRootPath, x);
     const outputFilePath = resolve(outDir!, filePath);
     fs.mkdirSync(dirname(outputFilePath), { recursive: true });
     fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
   });
+}
+
+function getSourceRootPath(configuration: ts.ParsedCommandLine) {
+  const configFilePath = typeof configuration.options.configFilePath === 'string'
+    ? configuration.options.configFilePath
+    : resolve('tsconfig.json');
+  const configDirectoryPath = dirname(configFilePath);
+
+  if (typeof configuration.options.rootDir === 'string') {
+    return resolve(configDirectoryPath, configuration.options.rootDir);
+  }
+
+  return configDirectoryPath;
 }

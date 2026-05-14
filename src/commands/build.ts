@@ -5,7 +5,7 @@ import { logger } from '../core/logger.js';
 
 export function build(cwd: string) {
   logger.success(`🔨 ${new Date().toLocaleTimeString()} Project building started`);
-  const configuration = getTSConfig(cwd, args.getArg('project'));
+  const configuration = getTSConfig(cwd, args['project']);
 
   const result = buildTypescriptFiles(configuration);
 

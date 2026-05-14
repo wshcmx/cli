@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "Preserve",
+    "outDir": "dist-default"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
