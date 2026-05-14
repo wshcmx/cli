@@ -7,7 +7,9 @@
     "posttest": "node ./scripts/test-project.mjs verify"
   },
   "dependencies": {
-    "@wshcmx/cli": "file:../..",
-    "@wshcmx/types": "^11.0.0-rc.1"
+    "@wshcmx/cli": "file:../.."
+  },
+  "devDependencies": {
+    "@wshcmx/types": "^12.1.0"
   }
 }
