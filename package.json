@@ -1,6 +1,6 @@
 {
   "name": "@wshcmx/cli",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "main": "dist/index.js",
   "type": "module",
   "repository": "github:wshcmx/cli",
@@ -36,7 +36,7 @@
   "description": "Набор CLI-инструментов предназначен для автоматизации сборки и отслеживания изменений в исходном коде с последующей транспиляцией в синтаксис WebSoftHCM.",
   "dependencies": {
     "@wshcmx/types": "^11.0.9",
-    "typescript": "^5.7.3"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0"

@@ -13,7 +13,7 @@ class ArgsParser {
   }
 
   getArg(argName: string) {
-    return process.argv.slice(2).find(x => x.startsWith('--') && x.slice(2) === argName);
+    return process.argv.slice(2).find((x: string) => x.startsWith('--') && x.slice(2) === argName);
   }
 
   getCommand() {
@@ -26,7 +26,7 @@ class ArgsParser {
 
   #parse() {
     this.#command = process.argv.slice(2)[0];
-    this.#argv = process.argv.slice(3).filter(x => x.startsWith('--')).map(x => x.slice(2));
+    this.#argv = process.argv.slice(3).filter((x: string) => x.startsWith('--')).map((x: string) => x.slice(2));
   }
 }
 

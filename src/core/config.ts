@@ -1,3 +1,5 @@
+import { dirname } from 'node:path';
+
 import ts from 'typescript';
 
 import { logger } from './logger.js';
@@ -17,7 +19,7 @@ export function getTSConfig(cwd: string, project: string = 'tsconfig.json'): ts.
     process.exit(1);
   }
 
-  const configFileContent = ts.parseJsonConfigFileContent(config, ts.sys, './');
+  const configFileContent = ts.parseJsonConfigFileContent(config, ts.sys, dirname(tsconfigPath), undefined, tsconfigPath);
 
   if (configFileContent.errors.length > 0) {
     configFileContent.errors.forEach(x => {

@@ -52,9 +52,9 @@ export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const normalizedExclude = (exclude ?? []).map(normalize);
 
   return fs.globSync([...(include ?? []), ...(files ?? [])])
-    .filter(x => !fileNames.includes(x))
-    .filter(x => !normalizedExclude?.includes(x))
-    .filter(x => fs.statSync(x).isFile());
+    .filter((x: string) => !fileNames.includes(x))
+    .filter((x: string) => !normalizedExclude?.includes(x))
+    .filter((x: string) => fs.statSync(x).isFile());
 }
 
 function reportDiagnostic(diagnostic: ts.Diagnostic) {
@@ -145,7 +145,7 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const { rootDir, outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
-  entries.forEach(x => {
+  entries.forEach((x: string) => {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
 
@@ -167,7 +167,7 @@ export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const { rootDir, outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
-  entries.forEach(x => {
+  entries.forEach((x: string) => {
     const filePath = rootDir ? relative(rootDir, x) : x;
     const outputFilePath = resolve(outDir!, filePath);
     fs.mkdirSync(dirname(outputFilePath), { recursive: true });
