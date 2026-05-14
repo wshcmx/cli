@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { args } from './core/args.js';
+import * as args from './core/args.js';
 import { commands } from './commands/index.js';
 import { help } from './commands/help.js';
 
 const cwd = process.cwd();
 
-const command = commands.get(args.getCommand());
+const command = commands.get(args.command);
 
 if (command) {
   command.callback(cwd);

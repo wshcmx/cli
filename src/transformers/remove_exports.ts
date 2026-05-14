@@ -1,6 +1,6 @@
 import ts from 'typescript';
 
-import { args, ArgsFlags } from '../core/args.js';
+import { args } from '../core/args.js';
 
 export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {
@@ -30,7 +30,7 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
       }
 
       if (ts.isImportDeclaration(node)) {
-        if (args.has(ArgsFlags.RETAIN_IMPORTS_AS_COMMENTS)) {
+        if (args['retain-imports-as-comments']) {
           const commentedStatement = ts.factory.createNotEmittedStatement(node);
           ts.addSyntheticLeadingComment(
             commentedStatement,

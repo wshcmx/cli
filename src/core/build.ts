@@ -8,7 +8,7 @@ import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { noDeclarationInLoop } from '../checks/no-declaration-in-loop.js';
-import { args, ArgsFlags } from './args.js';
+import { args } from './args.js';
 import { logger } from './logger.js';
 
 export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
@@ -93,7 +93,7 @@ function decorateHostWriteFile(host: ts.CompilerHost) {
         fileName = fileName.replace('.js', '.html');
       }
 
-      if (!args.has(ArgsFlags.RETAIN_NON_ASCII_CHARACTERS)) {
+      if (!args['retain-non-ascii-characters']) {
         // Decode non ASCII characters
         data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
           return String.fromCharCode(parseInt(match.substr(2), 16));
@@ -148,15 +148,16 @@ export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {
 }
 
 export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
-  if (!args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
+  if (!args['include-non-ts-files']) {
     return;
   }
 
-  const { rootDir, outDir } = configuration.options;
+  const sourceRootPath = getSourceRootPath(configuration);
+  const { outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
   entries.forEach((x: string) => {
-    const filePath = rootDir ? relative(rootDir, x) : x;
+    const filePath = relative(sourceRootPath, x);
     const outputFilePath = resolve(outDir!, filePath);
 
     fs.watch(resolve(x), (event: fs.WatchEventType) => {
@@ -170,17 +171,31 @@ export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
 }
 
 export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
-  if (!args.has(ArgsFlags.INCLUDE_NON_TS_FILES)) {
+  if (!args['include-non-ts-files']) {
     return;
   }
 
-  const { rootDir, outDir } = configuration.options;
+  const sourceRootPath = getSourceRootPath(configuration);
+  const { outDir } = configuration.options;
   const entries = collectNonTypescriptFiles(configuration);
 
   entries.forEach((x: string) => {
-    const filePath = rootDir ? relative(rootDir, x) : x;
+    const filePath = relative(sourceRootPath, x);
     const outputFilePath = resolve(outDir!, filePath);
     fs.mkdirSync(dirname(outputFilePath), { recursive: true });
     fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
   });
+}
+
+function getSourceRootPath(configuration: ts.ParsedCommandLine) {
+  const configFilePath = typeof configuration.options.configFilePath === 'string'
+    ? configuration.options.configFilePath
+    : resolve('tsconfig.json');
+  const configDirectoryPath = dirname(configFilePath);
+
+  if (typeof configuration.options.rootDir === 'string') {
+    return resolve(configDirectoryPath, configuration.options.rootDir);
+  }
+
+  return configDirectoryPath;
 }
