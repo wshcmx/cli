@@ -4,7 +4,7 @@ export enum ArgsFlags {
   RETAIN_NON_ASCII_CHARACTERS = 'retain-non-ascii-characters',
 }
 
-class ArgsParser {
+export class ArgsParser {
   #command: string = '';
   #argv: string[] = [];
 
@@ -13,7 +13,26 @@ class ArgsParser {
   }
 
   getArg(argName: string) {
-    return process.argv.slice(2).find((x: string) => x.startsWith('--') && x.slice(2) === argName);
+    const argumentsList = process.argv.slice(2);
+
+    for (let i = 0; i < argumentsList.length; i++) {
+      const argument = argumentsList[i];
+
+      if (!argument.startsWith(`--${argName}`)) {
+        continue;
+      }
+
+      if (argument === `--${argName}`) {
+        const nextArgument = argumentsList[i + 1];
+        return nextArgument?.startsWith('--') ? undefined : nextArgument;
+      }
+
+      if (argument.startsWith(`--${argName}=`)) {
+        return argument.slice(argName.length + 3);
+      }
+    }
+
+    return undefined;
   }
 
   getCommand() {
