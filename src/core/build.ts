@@ -8,7 +8,6 @@ import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { noDeclarationInLoop } from '../checks/no-declaration-in-loop.js';
-import { args } from './args.js';
 import { logger } from './logger.js';
 
 export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
@@ -91,13 +90,6 @@ function decorateHostWriteFile(host: ts.CompilerHost) {
       if (data.indexOf('/// @html') !== -1) {
         data = `<%\n// <script>\n${data}\n%>`;
         fileName = fileName.replace('.js', '.html');
-      }
-
-      if (!args['retain-non-ascii-characters']) {
-        // Decode non ASCII characters
-        data = data.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
-          return String.fromCharCode(parseInt(match.substr(2), 16));
-        });
       }
     }
 

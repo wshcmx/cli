@@ -10,7 +10,6 @@ class ArgsParser {
         help: { type: 'boolean', short: 'h', default: false },
         version: { type: 'boolean', short: 'v', default: false },
         project: { type: 'string', short: 'p', default: 'tsconfig.json' },
-        'retain-non-ascii-characters': { type: 'boolean', default: false },
       },
       allowPositionals: true
     });
