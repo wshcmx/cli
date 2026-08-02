@@ -1,7 +1,5 @@
 import ts from 'typescript';
 
-import { args } from '../core/args.js';
-
 export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
   return (context) => (sourceFile: ts.SourceFile) => {
     function visit(node: ts.Node): ts.Node {
@@ -30,18 +28,7 @@ export function removeExports(): ts.TransformerFactory<ts.SourceFile> {
       }
 
       if (ts.isImportDeclaration(node)) {
-        if (args['retain-imports-as-comments']) {
-          const commentedStatement = ts.factory.createNotEmittedStatement(node);
-          ts.addSyntheticLeadingComment(
-            commentedStatement,
-            ts.SyntaxKind.SingleLineCommentTrivia,
-            ` ${node.getFullText()}`,
-            false
-          );
-          node = commentedStatement;
-        } else {
-          return ts.factory.createNotEmittedStatement(node);
-        }
+        return ts.factory.createNotEmittedStatement(node);
       }
 
       if (ts.isTypeAliasDeclaration(node) && node.modifiers) {

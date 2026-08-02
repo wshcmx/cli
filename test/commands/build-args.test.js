@@ -53,20 +53,6 @@ suite('build command arguments', () => {
     strictEqual(hasBuiltIndex(shortOptionProjectPath, 'dist-default'), false);
   });
 
-  test('--retain-imports-as-comments preserves imports as commented lines in the emitted file', (t) => {
-    const withoutFlagProjectPath = createProject(t);
-    const withFlagProjectPath = createProject(t);
-
-    runBuild(withoutFlagProjectPath);
-    runBuild(withFlagProjectPath, ['--retain-imports-as-comments']);
-
-    const withoutFlagOutput = readFileSync(getBuiltIndexPath(withoutFlagProjectPath, 'dist-default'), 'utf-8');
-    const withFlagOutput = readFileSync(getBuiltIndexPath(withFlagProjectPath, 'dist-default'), 'utf-8');
-
-    strictEqual(withoutFlagOutput.includes("import { value } from './submodule';"), false);
-    ok(withFlagOutput.includes("// import { value } from './submodule';"));
-  });
-
   test('--retain-non-ascii-characters keeps unicode escapes in emitted output', (t) => {
     const withoutFlagProjectPath = createProject(t);
     const withFlagProjectPath = createProject(t);
