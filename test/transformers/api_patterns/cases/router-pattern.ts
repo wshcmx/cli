@@ -23,6 +23,11 @@ export type ControllerLibrary = {
 export function init() {
   createRouterRule();
   const apis = ReadDirectory("./../controllers");
+
+  if (apis[0] === undefined) {
+    return;
+  }
+
   const apiFunctions = OpenCodeLib<ControllerLibrary>(apis[0]).functions();
   const apiRoute = apiFunctions[0] as Route & {
     HasProperty(key: string): boolean;

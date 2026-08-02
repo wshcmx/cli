@@ -5,10 +5,15 @@ function authenticateApplication(req, xAppId) {
     }
     var credentials = applicationDocument.TopElem.credentials;
     var credentialDocument;
+    var credential;
     for (var i = 0; i < credentials.ChildNum; i++) {
-        credentialDocument = tools.open_doc(credentials[i].id);
+        credential = credentials[i];
+        if (credential === undefined) {
+            continue;
+        }
+        credentialDocument = tools.open_doc(credential.id);
         if (credentialDocument === undefined) {
-            wshcmx.utils.log.error("Авторизационные данные по id \"" + credentials[i].id + "\" не найдены в базе данных", "passport");
+            wshcmx.utils.log.error("Авторизационные данные по id \"" + credential.id + "\" не найдены в базе данных", "passport");
             continue;
         }
         if (credentialDocument.TopElem.login == req.AuthLogin

@@ -12,6 +12,9 @@ function createRouterRule() {
 function init() {
     createRouterRule();
     var apis = ReadDirectory("./../controllers");
+    if (apis[0] === undefined) {
+        return;
+    }
     var apiFunctions = OpenCodeLib(apis[0]).functions();
     var apiRoute = apiFunctions[0];
     wshcmx.routes.push({

@@ -14,12 +14,19 @@ export function authenticateApplication(req: Request, xAppId: string): Authentic
 
   const credentials = applicationDocument.TopElem.credentials;
   let credentialDocument;
+  let credential;
 
   for (let i = 0; i < credentials.ChildNum; i++) {
-    credentialDocument = tools.open_doc<CredentialDocument>(credentials[i].id);
+    credential = credentials[i];
+
+    if (credential === undefined) {
+      continue;
+    }
+
+    credentialDocument = tools.open_doc<CredentialDocument>(credential.id);
 
     if (credentialDocument === undefined) {
-      wshcmx.utils.log.error(`Авторизационные данные по id "${credentials[i].id}" не найдены в базе данных`, "passport");
+      wshcmx.utils.log.error(`Авторизационные данные по id "${credential.id}" не найдены в базе данных`, "passport");
       continue;
     }
 

@@ -2,9 +2,9 @@ export type Route = Object & {
   access: string;
   callback: string;
   method: string;
-  params?: object;
+  params: object | undefined;
   pattern: string;
-  url?: string;
+  url: string | undefined;
 };
 
 export type RouteParameter = {
