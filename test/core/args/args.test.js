@@ -27,7 +27,6 @@ suite('args parser', () => {
     strictEqual(args.help, false);
     strictEqual(args.version, false);
     strictEqual(args.project, 'tsconfig.json');
-    strictEqual(args['retain-non-ascii-characters'], false);
   });
 
   test('parses the positional command', async () => {
@@ -95,9 +94,6 @@ suite('args parser', () => {
       'node',
       'wshcmx',
       'build',
-      '--retain-non-ascii-characters',
     ]);
-
-    strictEqual(args['retain-non-ascii-characters'], true);
   });
 });

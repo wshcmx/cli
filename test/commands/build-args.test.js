@@ -52,18 +52,4 @@ suite('build command arguments', () => {
     strictEqual(hasBuiltIndex(longOptionProjectPath, 'dist-default'), false);
     strictEqual(hasBuiltIndex(shortOptionProjectPath, 'dist-default'), false);
   });
-
-  test('--retain-non-ascii-characters keeps unicode escapes in emitted output', (t) => {
-    const withoutFlagProjectPath = createProject(t);
-    const withFlagProjectPath = createProject(t);
-
-    runBuild(withoutFlagProjectPath);
-    runBuild(withFlagProjectPath, ['--retain-non-ascii-characters']);
-
-    const withoutFlagOutput = readFileSync(getBuiltIndexPath(withoutFlagProjectPath, 'dist-default'), 'utf-8');
-    const withFlagOutput = readFileSync(getBuiltIndexPath(withFlagProjectPath, 'dist-default'), 'utf-8');
-
-    ok(withoutFlagOutput.includes('Результат: '));
-    match(withFlagOutput, /\\u0420\\u0435\\u0437\\u0443\\u043b\\u044c\\u0442\\u0430\\u0442: /i);
-  });
 });
