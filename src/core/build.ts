@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import { dirname, extname, normalize, resolve } from 'node:path';
-
 import ts from 'typescript';
 
 import { enumsToObjects } from '../transformers/enums_to_objects.js';
@@ -33,37 +30,6 @@ export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
   });
 
   return emitResult;
-}
-
-export function collectNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
-  const { outDir } = configuration.options;
-
-  if (outDir === undefined) {
-    throw new Error('The outDir option is not set in the tsconfig.json file.');
-  }
-
-  if (process.versions.node.split('.')[0] < '22') {
-    throw new Error('The watch mode for non TypeScript files is available only since Node.js v22');
-  }
-
-  const { exclude, files, include } = configuration.raw;
-  const configFilePath = typeof configuration.options.configFilePath === 'string'
-    ? configuration.options.configFilePath
-    : resolve('tsconfig.json');
-  const configDirectoryPath = dirname(configFilePath);
-  const includePatterns = Array.isArray(include) ? include.filter((pattern): pattern is string => typeof pattern === 'string') : [];
-  const filePatterns = Array.isArray(files) ? files.filter((pattern): pattern is string => typeof pattern === 'string') : [];
-  const excludePatterns = Array.isArray(exclude) ? exclude.filter((pattern): pattern is string => typeof pattern === 'string') : [];
-  const fileNames = new Set(configuration.fileNames.map((fileName) => normalize(fileName)));
-  const normalizedExclude = new Set(excludePatterns.map((filePath) => normalize(resolve(configDirectoryPath, filePath))));
-  const compilableExtensions = new Set(['.js', '.jsx', '.ts', '.tsx']);
-
-  return fs.globSync([...includePatterns, ...filePatterns], { cwd: configDirectoryPath })
-    .map((filePath: string) => normalize(resolve(configDirectoryPath, filePath)))
-    .filter((filePath: string) => !fileNames.has(filePath))
-    .filter((filePath: string) => !normalizedExclude.has(filePath))
-    .filter((filePath: string) => !compilableExtensions.has(extname(filePath)))
-    .filter((filePath: string) => fs.statSync(filePath).isFile());
 }
 
 function reportDiagnostic(diagnostic: ts.Diagnostic) {
