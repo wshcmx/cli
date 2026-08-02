@@ -5,7 +5,6 @@ import { removeExports } from '../transformers/remove_exports.js';
 import { convertTemplateStrings } from '../transformers/template_strings.js';
 import { transformNamespaces } from '../transformers/transform_namespaces.js';
 import { noDeclarationInLoop } from '../checks/no-declaration-in-loop.js';
-import { logger } from './logger.js';
 
 export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
   const program = ts.createProgram(configuration.fileNames, configuration.options);
@@ -23,9 +22,9 @@ export function buildTypescriptFiles(configuration: ts.ParsedCommandLine) {
     if (diagnostic.file) {
       const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
     } else {
-      logger.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+      console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
     }
   });
 
@@ -36,9 +35,9 @@ function reportDiagnostic(diagnostic: ts.Diagnostic) {
   if (diagnostic.file) {
     const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
     const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-    logger.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+    console.error(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
   } else {
-    logger.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+    console.error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
   }
 }
 
