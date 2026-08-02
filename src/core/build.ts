@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { dirname, extname, normalize, relative, resolve } from 'node:path';
+import { dirname, extname, normalize, resolve } from 'node:path';
 
 import ts from 'typescript';
 
@@ -145,57 +145,4 @@ export function watchTypescriptFiles(configuration: ts.ParsedCommandLine) {
   };
 
   ts.createWatchProgram(host);
-}
-
-export function watchNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
-  if (!args['include-non-ts-files']) {
-    return;
-  }
-
-  const sourceRootPath = getSourceRootPath(configuration);
-  const { outDir } = configuration.options;
-  const entries = collectNonTypescriptFiles(configuration);
-
-  entries.forEach((x: string) => {
-    const filePath = relative(sourceRootPath, x);
-    const outputFilePath = resolve(outDir!, filePath);
-
-    fs.watch(resolve(x), (event: fs.WatchEventType) => {
-      if (event == 'change') {
-        fs.mkdirSync(dirname(outputFilePath), { recursive: true });
-        fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
-        logger.success(`🔨 ${new Date().toLocaleTimeString()} File ${x} has been changed`);
-      }
-    });
-  });
-}
-
-export function buildNonTypescriptFiles(configuration: ts.ParsedCommandLine) {
-  if (!args['include-non-ts-files']) {
-    return;
-  }
-
-  const sourceRootPath = getSourceRootPath(configuration);
-  const { outDir } = configuration.options;
-  const entries = collectNonTypescriptFiles(configuration);
-
-  entries.forEach((x: string) => {
-    const filePath = relative(sourceRootPath, x);
-    const outputFilePath = resolve(outDir!, filePath);
-    fs.mkdirSync(dirname(outputFilePath), { recursive: true });
-    fs.writeFileSync(outputFilePath, fs.readFileSync(resolve(x), 'utf-8'));
-  });
-}
-
-function getSourceRootPath(configuration: ts.ParsedCommandLine) {
-  const configFilePath = typeof configuration.options.configFilePath === 'string'
-    ? configuration.options.configFilePath
-    : resolve('tsconfig.json');
-  const configDirectoryPath = dirname(configFilePath);
-
-  if (typeof configuration.options.rootDir === 'string') {
-    return resolve(configDirectoryPath, configuration.options.rootDir);
-  }
-
-  return configDirectoryPath;
 }

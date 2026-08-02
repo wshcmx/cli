@@ -53,17 +53,6 @@ suite('build command arguments', () => {
     strictEqual(hasBuiltIndex(shortOptionProjectPath, 'dist-default'), false);
   });
 
-  test('--include-non-ts-files copies non-TypeScript assets into the output', (t) => {
-    const withoutFlagProjectPath = createProject(t);
-    const withFlagProjectPath = createProject(t);
-
-    runBuild(withoutFlagProjectPath);
-    runBuild(withFlagProjectPath, ['--include-non-ts-files']);
-
-    strictEqual(existsSync(join(withoutFlagProjectPath, 'dist-default', 'src', 'template.xml')), false);
-    ok(existsSync(join(withFlagProjectPath, 'dist-default', 'src', 'template.xml')));
-  });
-
   test('--retain-imports-as-comments preserves imports as commented lines in the emitted file', (t) => {
     const withoutFlagProjectPath = createProject(t);
     const withFlagProjectPath = createProject(t);

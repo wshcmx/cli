@@ -27,7 +27,6 @@ suite('args parser', () => {
     strictEqual(args.help, false);
     strictEqual(args.version, false);
     strictEqual(args.project, 'tsconfig.json');
-    strictEqual(args['include-non-ts-files'], false);
     strictEqual(args['retain-imports-as-comments'], false);
     strictEqual(args['retain-non-ascii-characters'], false);
   });
@@ -97,12 +96,10 @@ suite('args parser', () => {
       'node',
       'wshcmx',
       'build',
-      '--include-non-ts-files',
       '--retain-imports-as-comments',
       '--retain-non-ascii-characters',
     ]);
 
-    strictEqual(args['include-non-ts-files'], true);
     strictEqual(args['retain-imports-as-comments'], true);
     strictEqual(args['retain-non-ascii-characters'], true);
   });
