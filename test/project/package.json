@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "node ../../dist/index.js build --include-non-ts-files --retain-imports-as-comments",
+    "build": "node ../../dist/index.js build --retain-imports-as-comments",
     "start": "node ../../dist/index.js watch",
     "pretest": "node ./scripts/test-project.mjs clean && npm install",
     "test": "npm run build",
